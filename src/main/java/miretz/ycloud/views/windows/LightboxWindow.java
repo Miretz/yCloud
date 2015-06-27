@@ -11,11 +11,14 @@ import com.vaadin.ui.Window;
 
 public class LightboxWindow extends Window {
 
+	protected DocumentService documentService;
+	
 	private static final long serialVersionUID = 1L;
 
-	public LightboxWindow() {
+	public LightboxWindow(DocumentService documentService) {
 		super("Image Preview");
 		center();
+		this.documentService = documentService;
 	}
 
 	public void setImage(final String fileName) {
@@ -28,7 +31,7 @@ public class LightboxWindow extends Window {
 		layout.setSizeFull();
 		layout.setImmediate(true);
 
-		Image image = new Image(null, DocumentService.getFileResource(fileName));
+		Image image = new Image(null, documentService.getFileResource(fileName));
 		layout.addComponent(image);
 		layout.setComponentAlignment(image, Alignment.MIDDLE_CENTER);
 

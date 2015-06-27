@@ -1,4 +1,4 @@
-package miretz.ycloud.services;
+package miretz.ycloud.services.utils;
 
 /* 
  * Password Hashing With PBKDF2 (http://crackstation.net/hashing-security.htm).
@@ -41,7 +41,7 @@ import javax.crypto.spec.PBEKeySpec;
  * Author: havoc AT defuse.ca
  * www: http://crackstation.net/hashing-security.htm
  */
-public class PasswordHashService {
+public class PasswordHashUtil {
 	public static final String PBKDF2_ALGORITHM = "PBKDF2WithHmacSHA1";
 
 	// The following constants may be changed without breaking existing hashes.

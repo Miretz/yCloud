@@ -1,12 +1,12 @@
-package miretz.ycloud.services;
+package miretz.ycloud.services.utils;
 
 import com.vaadin.data.validator.AbstractValidator;
 
-public class PasswordValidatorService extends AbstractValidator<String> {
+public class PasswordValidator extends AbstractValidator<String> {
 
 	private static final long serialVersionUID = 1L;
 
-	public PasswordValidatorService() {
+	public PasswordValidator() {
 		super("The password provided is not valid");
 	}
 

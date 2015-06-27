@@ -1,10 +1,11 @@
 package miretz.ycloud.views;
 
-import miretz.ycloud.services.ConfigurationService;
 import miretz.ycloud.services.DatabaseService;
 import miretz.ycloud.views.partials.HeaderPanel;
 import miretz.ycloud.views.windows.CreateUserWindow;
 
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener.ViewChangeEvent;
 import com.vaadin.ui.Alignment;
@@ -22,16 +23,32 @@ import com.vaadin.ui.Window.CloseEvent;
 public class UsersView extends CustomComponent implements View {
 
 	private static final long serialVersionUID = 1L;
-
 	public static final String NAME = "users";
 
-	private Label text = new Label();
-	private HeaderPanel header = new HeaderPanel();
-	private Button btnCreateUser = new Button("Create User");
-	private Button backButton = new Button("Return");
-	private VerticalLayout users = new VerticalLayout();
+	private Label text;
+	private HeaderPanel header;
+	private Button btnCreateUser;
+	private Button backButton;
+	private VerticalLayout users;
+	
+	protected String adminUser;
+	protected DatabaseService databaseService;
 
-	public UsersView() {
+	@Inject
+	public UsersView(@Named("adminUser") String adminUser, DatabaseService databaseService){
+		this.adminUser = adminUser;
+		this.databaseService = databaseService;
+	}
+	
+	
+	public void initialize() {
+
+		text = new Label();
+		header = new HeaderPanel();
+		btnCreateUser = new Button("Create User");
+		backButton = new Button("Return");
+		users = new VerticalLayout();
+
 		VerticalLayout vl = new VerticalLayout();
 		vl.setSpacing(true);
 		vl.setSizeFull();
@@ -56,9 +73,9 @@ public class UsersView extends CustomComponent implements View {
 
 	private void loadUsers() {
 		users.removeAllComponents();
-		for (final String user : DatabaseService.listUsernames()) {
+		for (final String user : databaseService.listUsernames()) {
 			HorizontalLayout hl = new HorizontalLayout();
-			if (user.equals(ConfigurationService.getProperty("adminUser"))) {
+			if (user.equals(adminUser)) {
 				hl.addComponent(new Label(user + " [admin]"));
 			} else {
 				hl.addComponent(new Label(user));
@@ -68,7 +85,7 @@ public class UsersView extends CustomComponent implements View {
 
 					@Override
 					public void buttonClick(ClickEvent event) {
-						DatabaseService.removeUser(user);
+						databaseService.removeUser(user);
 						loadUsers();
 					}
 				}));
@@ -80,6 +97,9 @@ public class UsersView extends CustomComponent implements View {
 
 	@Override
 	public void enter(ViewChangeEvent event) {
+
+		initialize();
+
 		String username = String.valueOf(getSession().getAttribute("user"));
 		header.enableLogout();
 		text.setValue("Current user: " + username);
@@ -90,7 +110,7 @@ public class UsersView extends CustomComponent implements View {
 
 			@Override
 			public void buttonClick(ClickEvent event) {
-				CreateUserWindow uv = new CreateUserWindow();
+				CreateUserWindow uv = new CreateUserWindow(databaseService);
 				UI.getCurrent().addWindow(uv);
 				uv.addCloseListener(new Window.CloseListener() {
 

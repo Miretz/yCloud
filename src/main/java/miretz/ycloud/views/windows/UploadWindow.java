@@ -8,7 +8,6 @@ import java.io.OutputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import miretz.ycloud.services.ConfigurationService;
 import miretz.ycloud.services.DatabaseService;
 import miretz.ycloud.services.DocumentService;
 
@@ -39,7 +38,7 @@ public class UploadWindow extends Window {
 	private final Label commentLabel = new Label("File comment:");
 	private final TextField commentField = new TextField();
 
-	public UploadWindow() {
+	public UploadWindow(final DocumentService documentService, final DatabaseService databaseService, final String uploadDir) {
 
 		super("Upload File");
 		center();
@@ -65,7 +64,8 @@ public class UploadWindow extends Window {
 		progressLayout.setWidth("100%");
 		content.addComponent(progressLayout);
 		content.setComponentAlignment(progressLayout, Alignment.MIDDLE_CENTER);
-
+		
+		
 		class FileUploader implements Receiver, SucceededListener {
 			private static final long serialVersionUID = 1L;
 			public File file;
@@ -76,7 +76,7 @@ public class UploadWindow extends Window {
 					if (filename == null || filename.isEmpty()) {
 						throw new FileNotFoundException("No File Selected!");
 					}
-					file = new File(ConfigurationService.getProperty("uploadDir") + filename);
+					file = new File(uploadDir + filename);
 					fos = new FileOutputStream(file);
 				} catch (final java.io.FileNotFoundException e) {
 					new Notification("Could not open file", e.getMessage(), Notification.Type.ERROR_MESSAGE).show(Page.getCurrent());
@@ -90,8 +90,8 @@ public class UploadWindow extends Window {
 				UI.getCurrent().setPollInterval(-1);
 				try {
 					String creator = String.valueOf(getSession().getAttribute("user"));
-					DocumentService.saveThumbnail(event.getFilename());
-					DatabaseService.addFile(event.getFilename(), commentField.getValue(), creator);
+					documentService.saveThumbnail(event.getFilename());
+					databaseService.addFile(event.getFilename(), commentField.getValue(), creator);
 				} catch (IOException e) {
 					logger.log(Level.SEVERE, "Failed to create thumbnail!", e);
 				} finally {
@@ -100,7 +100,6 @@ public class UploadWindow extends Window {
 				}
 			}
 		}
-		;
 
 		FileUploader receiver = new FileUploader();
 		upload = new Upload("Please select your file.", receiver);
@@ -136,22 +135,12 @@ public class UploadWindow extends Window {
 		commentField.setVisible(true);
 		commentField.setWidth("250px");
 
-		// upload.setVisible(false);
-		// commentField.addTextChangeListener(new TextChangeListener(){
-		//
-		// private static final long serialVersionUID = 1L;
-		//
-		// @Override
-		// public void textChange(TextChangeEvent event) {
-		// upload.setVisible(true);
-		// }
-		//
-		// });
-
 		content.addComponent(commentLabel);
 		content.addComponent(commentField);
 		content.addComponent(upload);
 
 	}
+
+	
 
 }

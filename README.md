@@ -2,7 +2,7 @@ ycloud
 ==============
 
 
-File storage application using Vaadin Framework and MongoDB
+File storage application using Vaadin Framework, Google Guice and MongoDB
 
 Before run modify the config.properties file.
 

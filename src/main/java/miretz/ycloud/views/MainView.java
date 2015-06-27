@@ -2,13 +2,15 @@ package miretz.ycloud.views;
 
 import java.io.InputStream;
 
-import miretz.ycloud.services.ConfigurationService;
+import miretz.ycloud.services.DatabaseService;
 import miretz.ycloud.services.DocumentService;
 import miretz.ycloud.views.partials.FilesTable;
 import miretz.ycloud.views.partials.HeaderPanel;
 import miretz.ycloud.views.windows.ConfirmationWindow;
 import miretz.ycloud.views.windows.UploadWindow;
 
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener.ViewChangeEvent;
 import com.vaadin.server.FileDownloader;
@@ -34,44 +36,70 @@ public class MainView extends CustomComponent implements View {
 	public static final String NAME = "";
 
 	private String username = "";
-	private Label sizeStats = new Label();
-	private HeaderPanel header = new HeaderPanel();
-	private Button uploadButton = new Button("Upload File");
-	private Button downloadAllButton = new Button("Download .zip");
-	private Button deleteAllButton = new Button("Delete All");
-	private Button reloadButton = new Button("Refresh");
-	private FilesTable filesView = new FilesTable(this);
+	private Label sizeStats;
+	private HeaderPanel header;
+	private Button uploadButton;
+	private Button downloadAllButton;
+	private Button deleteAllButton;
+	private Button reloadButton;
+	private FilesTable filesView;
+	
+	
+	protected String adminUser;
+	protected String uploadDir;
+	protected DocumentService documentService;
+	protected DatabaseService databaseService;
 
-	public MainView() {
+	@Inject
+	public MainView(@Named("adminUser") String adminUser, @Named("uploadDir") String uploadDir, DocumentService documentService, DatabaseService databaseService){
+		this.adminUser = adminUser;
+		this.uploadDir = uploadDir;
+		this.documentService = documentService;
+		this.databaseService = databaseService;
+	}
+
+	public void initialize() {
+
+		sizeStats = new Label();
+		header = new HeaderPanel();
+		uploadButton = new Button("Upload File");
+		downloadAllButton = new Button("Download .zip");
+		deleteAllButton = new Button("Delete All");
+		reloadButton = new Button("Refresh");
+		filesView = new FilesTable(this, documentService);
+
 		VerticalLayout vl = new VerticalLayout();
 		vl.setSpacing(true);
 		vl.setSizeFull();
-		
+
 		vl.addComponent(header);
 
 		HorizontalLayout info = new HorizontalLayout(sizeStats);
 		vl.addComponent(info);
 		vl.setComponentAlignment(info, Alignment.MIDDLE_CENTER);
-		
+
 		HorizontalLayout buttons = new HorizontalLayout(uploadButton, reloadButton, downloadAllButton, deleteAllButton);
-		
+
 		vl.addComponent(buttons);
 		vl.setComponentAlignment(buttons, Alignment.MIDDLE_CENTER);
-				
+
 		HorizontalLayout files = new HorizontalLayout(filesView);
-		//files.setMargin(true);
+		// files.setMargin(true);
 		files.setSizeFull();
 		files.setImmediate(true);
 		vl.addComponent(files);
-			
+
 		setCompositionRoot(vl);
 	}
 
 	@Override
 	public void enter(ViewChangeEvent event) {
+
+		initialize();
+
 		header.enableLogout();
 		username = String.valueOf(getSession().getAttribute("user"));
-		if (username.equals(ConfigurationService.getProperty("adminUser"))) {
+		if (username.equals(adminUser)) {
 			header.enableUsers();
 		}
 
@@ -84,7 +112,7 @@ public class MainView extends CustomComponent implements View {
 
 			@Override
 			public void buttonClick(ClickEvent event) {
-				UploadWindow uv = new UploadWindow();
+				UploadWindow uv = new UploadWindow(documentService, databaseService, uploadDir);
 				UI.getCurrent().addWindow(uv);
 				uv.addCloseListener(new Window.CloseListener() {
 
@@ -118,7 +146,7 @@ public class MainView extends CustomComponent implements View {
 			private static final long serialVersionUID = 1L;
 
 			public InputStream getStream() {
-				return DocumentService.getAllFilesZip();
+				return documentService.getAllFilesZip();
 			}
 		};
 		StreamResource sr = new StreamResource(source, "all_files.zip");
@@ -137,7 +165,7 @@ public class MainView extends CustomComponent implements View {
 			@Override
 			public void buttonClick(ClickEvent event) {
 
-				ConfirmationWindow confirmation = new ConfirmationWindow(null, ConfirmationWindow.Action.DELETE_ALL);
+				ConfirmationWindow confirmation = new ConfirmationWindow(null, ConfirmationWindow.Action.DELETE_ALL, documentService);
 
 				UI.getCurrent().addWindow(confirmation);
 
@@ -158,6 +186,6 @@ public class MainView extends CustomComponent implements View {
 	}
 
 	public void generateStats() {
-		sizeStats.setValue(username + " in " + DocumentService.UPLOAD_DIR + " (" + DocumentService.getSizeOfFiles() + " / " + DocumentService.getFreeSpace() + " MB)");
+		sizeStats.setValue(username + " in " + uploadDir + " (" + documentService.getSizeOfFiles() + " / " + documentService.getFreeSpace() + " MB)");
 	}
 }

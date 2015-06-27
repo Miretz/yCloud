@@ -4,7 +4,7 @@ import java.util.List;
 
 import miretz.ycloud.models.Document;
 import miretz.ycloud.services.DocumentService;
-import miretz.ycloud.services.FileIconUtil;
+import miretz.ycloud.services.utils.FileIconUtil;
 import miretz.ycloud.views.MainView;
 import miretz.ycloud.views.windows.ConfirmationWindow;
 import miretz.ycloud.views.windows.LightboxWindow;
@@ -29,13 +29,19 @@ import com.vaadin.ui.themes.ValoTheme;
 
 public class FilesTable extends Table {
 
+	protected DocumentService documentService;
+
 	private static final long serialVersionUID = 1L;
 	private final MainView mainView;
 	private LightboxWindow lw;
 	private boolean lightboxWindowClosed = true;
 
-	public FilesTable(MainView mainView) {
+	public FilesTable(MainView mainView, DocumentService documentService) {
+				
 		super();
+		
+		this.documentService = documentService;
+		
 		this.mainView = mainView;
 		addContainerProperty("Icon", Image.class, null);
 		addContainerProperty("FileName / Comment", VerticalLayout.class, null);
@@ -52,9 +58,9 @@ public class FilesTable extends Table {
 		addStyleName(ValoTheme.TABLE_SMALL);
 		setColumnCollapsingAllowed(true);
 		setColumnCollapsed("File Type", true);
-		//setColumnWidth("", 50);
+		// setColumnWidth("", 50);
 		setSizeFull();
-		lw = new LightboxWindow();
+		lw = new LightboxWindow(documentService);
 		lw.addCloseListener(new Window.CloseListener() {
 
 			private static final long serialVersionUID = 1L;
@@ -68,17 +74,17 @@ public class FilesTable extends Table {
 
 	public void loadFiles() {
 		removeAllItems();
-		List<Document> fileNames = DocumentService.getAllFilesAsDocuments();
+		List<Document> fileNames = documentService.getAllFilesAsDocuments();
 		int counter = 1;
 		for (final Document document : fileNames) {
 
 			final String fileName = document.getFileName();
-			final Double size = DocumentService.getSizeInMbDouble(document.getSize());
+			final Double size = documentService.getSizeInMbDouble(document.getSize());
 
 			String mimeType = document.getMimeType();
 
 			Image thumbnail = null;
-			FileResource thumbnailResource = DocumentService.getThumbnailFileResource(fileName);
+			FileResource thumbnailResource = documentService.getThumbnailFileResource(fileName);
 			if (thumbnailResource != null) {
 				thumbnail = new Image(null, thumbnailResource);
 				thumbnail.addStyleName("cursor-pointer");
@@ -105,10 +111,10 @@ public class FilesTable extends Table {
 				thumbnail = new Image(null, resource);
 			}
 
-			String modified = DocumentService.getModifiedDate(fileName);
+			String modified = documentService.getModifiedDate(fileName);
 
 			Button download = new Button(fileName);
-			FileResource downloadResource = DocumentService.getFileResource(fileName);
+			FileResource downloadResource = documentService.getFileResource(fileName);
 			FileDownloader fileDownloader = new FileDownloader(downloadResource);
 			fileDownloader.extend(download);
 			download.addStyleName(ValoTheme.BUTTON_LINK);
@@ -127,7 +133,7 @@ public class FilesTable extends Table {
 				@Override
 				public void buttonClick(ClickEvent event) {
 
-					ConfirmationWindow confirmation = new ConfirmationWindow(fileName, ConfirmationWindow.Action.DELETE);
+					ConfirmationWindow confirmation = new ConfirmationWindow(fileName, ConfirmationWindow.Action.DELETE, documentService);
 
 					UI.getCurrent().addWindow(confirmation);
 

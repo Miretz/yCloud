@@ -2,42 +2,22 @@ package miretz.ycloud.services;
 
 import java.util.List;
 
-import miretz.ycloud.dbconnectors.MongoDbConnector;
+public interface DatabaseService {
+	
+	boolean checkUserPassword(String username, String password);
 
-public class DatabaseService {
+	void addUser(String username, String password);
 	
-	public static boolean checkUserPassword(String username, String password){
-		return MongoDbConnector.checkUserPassword(username, password);
-	}
+	void removeUser(String username);
+	
+	List<String> listUsernames();
+	
+	void addFile(String fileName, String comment, String creator);
 
-	public static void addUser(String username, String password) {
-		MongoDbConnector.addUser(username, password);		
-	}
+	void deleteFile(String fileName);
 	
-	public static void removeUser(String username) {
-		MongoDbConnector.removeUser(username);
-	}
+	String getFileComment(String fileName);
 	
-	public static List<String> listUsernames(){
-		return MongoDbConnector.listUsernames();
-	}
-	
-	public static void addFile(String fileName, String comment, String creator) {
-		MongoDbConnector.addFile(fileName, comment, creator);
-	}
-
-	public static void deleteFile(String fileName){
-		MongoDbConnector.deleteFile(fileName);
-	}
-	
-	public static String getFileComment(String fileName){
-		return MongoDbConnector.getFileParameter(fileName,"comment");
-	}
-	
-	public static String getFileCreator(String fileName){
-		return MongoDbConnector.getFileParameter(fileName,"creator");
-	}
-	
-
+	String getFileCreator(String fileName);
 	
 }

@@ -18,13 +18,18 @@ import com.vaadin.ui.Window;
 @SuppressWarnings("serial")
 public class ConfirmationWindow extends Window {
 
+	protected DocumentService documentService;
+	
 	public enum Action {
 		DELETE, DELETE_ALL;
 	}
-
-	public ConfirmationWindow(String fileName, final Action action) {
+	
+	public ConfirmationWindow(String fileName, final Action action, DocumentService documentService) {
 
 		super("User confirmation required");
+
+		this.documentService = documentService;
+		
 		center();
 
 		String text = "";
@@ -38,7 +43,7 @@ public class ConfirmationWindow extends Window {
 			
 		case DELETE_ALL: 
 						
-			List<Document> allFiles = DocumentService.getAllFilesAsDocuments();
+			List<Document> allFiles = documentService.getAllFilesAsDocuments();
 			
 			StringBuilder sb = new StringBuilder();
 			
@@ -95,13 +100,13 @@ public class ConfirmationWindow extends Window {
 		switch (action) {
 		case DELETE:
 
-			DocumentService.deleteFile(fileName);
+			documentService.deleteFile(fileName);
 			Notification.show("File Deleted:", fileName, Notification.Type.HUMANIZED_MESSAGE);
 			break;
 		
 		case DELETE_ALL:
 		
-			DocumentService.deleteAllFiles();
+			documentService.deleteAllFiles();
 		    Notification.show("Files deleted: ", fileName, Notification.Type.HUMANIZED_MESSAGE);
 			break;
 		

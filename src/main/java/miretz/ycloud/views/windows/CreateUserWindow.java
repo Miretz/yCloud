@@ -1,7 +1,7 @@
 package miretz.ycloud.views.windows;
 
 import miretz.ycloud.services.DatabaseService;
-import miretz.ycloud.services.PasswordValidatorService;
+import miretz.ycloud.services.utils.PasswordValidator;
 
 import com.vaadin.data.validator.EmailValidator;
 import com.vaadin.ui.Button;
@@ -19,9 +19,10 @@ public class CreateUserWindow extends Window {
 	private final PasswordField fldPassword;
 	private final Button btnCreateUser;
 
-	public CreateUserWindow() {
+	public CreateUserWindow(final DatabaseService databaseService) {
 
 		super("Create User");
+
 		center();
 
 		// Some basic content for the window
@@ -40,15 +41,14 @@ public class CreateUserWindow extends Window {
 		fldUsername.setWidth("300px");
 		fldUsername.setRequired(true);
 		fldUsername.setInputPrompt("Your username (eg. joe@email.com)");
-		fldUsername.addValidator(new EmailValidator(
-				"Username must be an email address"));
+		fldUsername.addValidator(new EmailValidator("Username must be an email address"));
 		fldUsername.setInvalidAllowed(false);
 		content.addComponent(fldUsername);
 
 		// Create the password input field
 		fldPassword = new PasswordField("Password:");
 		fldPassword.setWidth("300px");
-		fldPassword.addValidator(new PasswordValidatorService());
+		fldPassword.addValidator(new PasswordValidator());
 		fldPassword.setRequired(true);
 		fldPassword.setValue("");
 		fldPassword.setNullRepresentation("");
@@ -68,7 +68,7 @@ public class CreateUserWindow extends Window {
 				} else {
 					String username = fldUsername.getValue();
 					String password = fldPassword.getValue();
-					DatabaseService.addUser(username, password);
+					databaseService.addUser(username, password);
 					close();
 				}
 			}
