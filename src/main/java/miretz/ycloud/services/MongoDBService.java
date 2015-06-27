@@ -26,27 +26,33 @@ import com.mongodb.client.MongoDatabase;
 @Singleton
 public class MongoDBService implements DatabaseService {
 
+	private static final String PROPERTY_FILES_DB_TABLE_NAME = "filesDbTableName";
+	private static final String PROPERTY_USERS_DB_TABLE_NAME = "usersDbTableName";
+	private static final String PROPERTY_ADMIN_USER = "adminUser";
+	private static final String PROPERTY_ADMIN_PASS = "adminPass";
 	protected static final String PROPERTY_DB_HOST = "dbHost";
 	protected static final String PROPERTY_DB_PASS = "dbPass";
 	protected static final String PROPERTY_DB_USER = "dbUser";
 	protected static final String PROPERTY_USE_FAKE_MONGO = "useFakeMongo";
 	protected static final String PROPERTY_DB_NAME = "dbName";
-	protected static final String USERS_TABLE = "users";
-	protected static final String FILES_TABLE = "files";
 
 	protected MongoClient mongo;
 	protected MongoDatabase database;
 
 	protected String adminPass;
 	protected String adminUser;
-	
+	protected String usersDbTableName;
+	protected String filesDbTableName;
+
 	@Inject
-	public MongoDBService(@Named(PROPERTY_USE_FAKE_MONGO) String useFakeMongo, @Named(PROPERTY_DB_NAME) String dbName, @Named(PROPERTY_DB_HOST) String dbHost, @Named(PROPERTY_DB_PASS) String dbPass, @Named(PROPERTY_DB_USER) String dbUser, @Named("adminUser") String adminUser,
-			@Named("adminPass") String adminPass) {
+	public MongoDBService(@Named(PROPERTY_USE_FAKE_MONGO) String useFakeMongo, @Named(PROPERTY_DB_NAME) String dbName, @Named(PROPERTY_DB_HOST) String dbHost, @Named(PROPERTY_DB_PASS) String dbPass, @Named(PROPERTY_DB_USER) String dbUser, @Named(PROPERTY_ADMIN_USER) String adminUser,
+			@Named(PROPERTY_ADMIN_PASS) String adminPass, @Named(PROPERTY_USERS_DB_TABLE_NAME) String usersDbTableName, @Named(PROPERTY_FILES_DB_TABLE_NAME) String filesDbTableName) {
 
 		this.adminPass = adminPass;
 		this.adminUser = adminUser;
-		
+		this.usersDbTableName = usersDbTableName;
+		this.filesDbTableName = filesDbTableName;
+
 		if (Boolean.parseBoolean(useFakeMongo)) {
 
 			// fake mongo
@@ -73,7 +79,7 @@ public class MongoDBService implements DatabaseService {
 		// remove admin
 		removeUser(adminUser);
 
-		MongoCollection<Document> table = database.getCollection(USERS_TABLE);
+		MongoCollection<Document> table = database.getCollection(usersDbTableName);
 
 		Document document = new Document();
 		document.put("username", adminUser);
@@ -83,9 +89,10 @@ public class MongoDBService implements DatabaseService {
 		table.insertOne(document);
 	}
 
+	@Override
 	public boolean checkUserPassword(String username, String password) {
 
-		MongoCollection<Document> table = database.getCollection(USERS_TABLE);
+		MongoCollection<Document> table = database.getCollection(usersDbTableName);
 		FindIterable<Document> users = table.find(eq("username", username));
 
 		for (Document user : users) {
@@ -99,10 +106,11 @@ public class MongoDBService implements DatabaseService {
 
 	}
 
+	@Override
 	public void addUser(String username, String password) {
 		String hash = PasswordHashUtil.createHash(password);
 		if (hash != null) {
-			MongoCollection<Document> table = database.getCollection(USERS_TABLE);
+			MongoCollection<Document> table = database.getCollection(usersDbTableName);
 
 			Document document = new Document();
 			document.put("username", username);
@@ -113,13 +121,15 @@ public class MongoDBService implements DatabaseService {
 		}
 	}
 
+	@Override
 	public void removeUser(String username) {
-		MongoCollection<Document> table = database.getCollection(USERS_TABLE);
+		MongoCollection<Document> table = database.getCollection(usersDbTableName);
 		table.deleteOne(eq("username", username));
 	}
 
+	@Override
 	public List<String> listUsernames() {
-		MongoCollection<Document> table = database.getCollection(USERS_TABLE);
+		MongoCollection<Document> table = database.getCollection(usersDbTableName);
 
 		List<String> result = new ArrayList<String>();
 
@@ -130,8 +140,9 @@ public class MongoDBService implements DatabaseService {
 		return result;
 	}
 
+	@Override
 	public void addFile(String fileName, String comment, String creator) {
-		MongoCollection<Document> table = database.getCollection(FILES_TABLE);
+		MongoCollection<Document> table = database.getCollection(filesDbTableName);
 
 		Document document = new Document();
 		document.put("fileName", fileName);
@@ -142,13 +153,14 @@ public class MongoDBService implements DatabaseService {
 		table.insertOne(document);
 	}
 
+	@Override
 	public void deleteFile(String fileName) {
-		MongoCollection<Document> table = database.getCollection(FILES_TABLE);
+		MongoCollection<Document> table = database.getCollection(filesDbTableName);
 		table.deleteOne(eq("fileName", fileName));
 	}
 
 	public String getFileParameter(String fileName, String parameter) {
-		MongoCollection<Document> table = database.getCollection(FILES_TABLE);
+		MongoCollection<Document> table = database.getCollection(filesDbTableName);
 		Document myDoc = table.find(eq("fileName", fileName)).first();
 		if (myDoc == null) {
 			return "";

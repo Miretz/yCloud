@@ -5,7 +5,6 @@ import java.util.List;
 import miretz.ycloud.models.Document;
 import miretz.ycloud.services.DocumentService;
 
-import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
@@ -19,54 +18,55 @@ import com.vaadin.ui.Window;
 public class ConfirmationWindow extends Window {
 
 	protected DocumentService documentService;
-	
+
 	public enum Action {
 		DELETE, DELETE_ALL;
 	}
-	
+
 	public ConfirmationWindow(String fileName, final Action action, DocumentService documentService) {
 
 		super("User confirmation required");
 
 		this.documentService = documentService;
-		
+
 		center();
 
 		String text = "";
-		
-		switch(action){
-		case DELETE: 
-		
+
+		switch (action) {
+		case DELETE:
+
 			text = "Are you sure you want to delete " + fileName + " ?";
-		
+
 			break;
-			
-		case DELETE_ALL: 
-						
+
+		case DELETE_ALL:
+
 			List<Document> allFiles = documentService.getAllFilesAsDocuments();
-			
+
 			StringBuilder sb = new StringBuilder();
-			
-			for(Document doc: allFiles){
+
+			for (Document doc : allFiles) {
 				sb.append(doc.getFileName());
 				sb.append("\n");
 			}
 			fileName = sb.toString();
-						
+
 			text = "Files to delete: \n" + fileName;
-						
+
 			break;
-		
-		default: break;
+
+		default:
+			break;
 		}
-				
+
 		// Some basic content for the window
 		VerticalLayout content = new VerticalLayout();
 		content.setMargin(true);
 		setContent(content);
 
 		// label
-		Label textLabel = new Label(text, ContentMode.PREFORMATTED);
+		Label textLabel = new Label(text);
 		content.addComponent(textLabel);
 		content.setComponentAlignment(textLabel, Alignment.MIDDLE_CENTER);
 
@@ -74,7 +74,7 @@ public class ConfirmationWindow extends Window {
 		HorizontalLayout buttons = new HorizontalLayout();
 
 		final String fileNameFinal = fileName;
-		
+
 		Button yes = new Button("Yes", new Button.ClickListener() {
 			@Override
 			public void buttonClick(ClickEvent event) {
@@ -103,13 +103,13 @@ public class ConfirmationWindow extends Window {
 			documentService.deleteFile(fileName);
 			Notification.show("File Deleted:", fileName, Notification.Type.HUMANIZED_MESSAGE);
 			break;
-		
+
 		case DELETE_ALL:
-		
+
 			documentService.deleteAllFiles();
-		    Notification.show("Files deleted: ", fileName, Notification.Type.HUMANIZED_MESSAGE);
+			Notification.show("Files deleted: ", fileName, Notification.Type.HUMANIZED_MESSAGE);
 			break;
-		
+
 		default:
 			break;
 		}

@@ -2,13 +2,13 @@ package miretz.ycloud.models;
 
 public class Document {
 
-	private String fileName;
-	private String comment;
-	private String creator;
-	private long size;
-	private String mimeType;
+	private final String fileName;
+	private final String comment;
+	private final String creator;
+	private final long size;
+	private final String mimeType;
 
-	public Document(String fileName, long size, String mimeType, String comment, String creator) {
+	public Document(final String fileName, final long size, final String mimeType, final String comment, final String creator) {
 		this.fileName = fileName;
 		this.size = size;
 		this.mimeType = mimeType;
@@ -27,7 +27,7 @@ public class Document {
 	public long getSize() {
 		return size;
 	}
-	
+
 	public String getMimeType() {
 		return mimeType;
 	}
@@ -36,6 +36,4 @@ public class Document {
 		return comment;
 	}
 
-	
-	
 }

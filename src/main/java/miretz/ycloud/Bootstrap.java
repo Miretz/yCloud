@@ -19,32 +19,32 @@ import com.google.inject.servlet.ServletModule;
 
 @WebListener
 public class Bootstrap extends GuiceServletContextListener {
-    @Override
-    protected Injector getInjector() {
-        return Guice.createInjector(new ServletModule() {
-            @Override
-            protected void configureServlets() {
-                serve("/*").with(GuiceApplicationServlet.class);
-                
-                ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        		InputStream stream = classLoader.getResourceAsStream("config.properties");
-        		Properties properties = new Properties();
+	@Override
+	protected Injector getInjector() {
+		return Guice.createInjector(new ServletModule() {
+			@Override
+			protected void configureServlets() {
+				serve("/*").with(GuiceApplicationServlet.class);
 
-        		if (stream != null) {
-        			try {
-        				properties.load(stream);
-        				
-        				Names.bindProperties(binder(), properties);
-        				
-        			} catch (IOException e) {
-        				throw new RuntimeException(e.getMessage(), e);
-        			}
-        		}
-        		
-        		bind(DatabaseService.class).to(MongoDBService.class);
-        		bind(DocumentService.class).to(FileSystemService.class);
-                
-            }
-        });
-    }
+				ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+				InputStream stream = classLoader.getResourceAsStream("config.properties");
+				Properties properties = new Properties();
+
+				if (stream != null) {
+					try {
+						properties.load(stream);
+
+						Names.bindProperties(binder(), properties);
+
+					} catch (IOException e) {
+						throw new RuntimeException(e.getMessage(), e);
+					}
+				}
+
+				bind(DatabaseService.class).to(MongoDBService.class);
+				bind(DocumentService.class).to(FileSystemService.class);
+
+			}
+		});
+	}
 }

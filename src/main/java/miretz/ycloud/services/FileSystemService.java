@@ -22,11 +22,11 @@ import java.util.zip.ZipOutputStream;
 import javax.imageio.ImageIO;
 import javax.inject.Singleton;
 
-import com.google.inject.name.Named;
-
 import miretz.ycloud.models.Document;
+import miretz.ycloud.services.utils.DirectoryFilenameFilter;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.vaadin.server.FileResource;
 
 @Singleton
@@ -34,36 +34,39 @@ public class FileSystemService implements DocumentService {
 
 	private final static Logger logger = Logger.getLogger(FileSystemService.class.getName());
 
-	private static final String DATE_FORMAT = "dd/MM/yyyy HH:mm:ss";
-	private static final int BUFFER = 2048;
-	public static final String[] IMAGE_FORMATS = { "jpg", "png", "bmp", "gif" };
-	public static final Dimension THUMB_DIMENSION = new Dimension(50, 50);
+	protected static final String[] IMAGE_FORMATS = { "jpg", "png", "bmp", "gif" };
+	protected static final int BUFFER = 2048;
 
-	protected DatabaseService databaseService;
-	protected String thumbnailDir;
-	protected String uploadDir;
+	protected final DatabaseService databaseService;
+	protected final String dateFormat;
+	protected final Dimension thumbnailDimensions;
+
+	protected final File thumbnailDir;
+	protected final File uploadDir;
 
 	@Inject
-	public FileSystemService(@Named("thumbnailDir") String thumbnailDir, @Named("uploadDir") String uploadDir, DatabaseService databaseService) {
-		this.thumbnailDir = thumbnailDir;
-		this.uploadDir = uploadDir;
+	public FileSystemService(@Named("thumbnailDir") String thumbnailDir, @Named("uploadDir") String uploadDir, @Named("dateFormat") String dateFormat, DatabaseService databaseService) {
 		this.databaseService = databaseService;
-	}
+		this.dateFormat = dateFormat;
+		this.thumbnailDimensions = new Dimension(50, 50);
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see miretz.ycloud.services.DocumentService#getAllFilesAsDocuments()
-	 */
-	@Override
-	public List<Document> getAllFilesAsDocuments() {
-		List<Document> results = new ArrayList<Document>();
-		File rootDir = new File(uploadDir);
-		if (rootDir == null || !rootDir.exists()) {
+		this.uploadDir = new File(uploadDir);
+		if (this.uploadDir == null || !this.uploadDir.exists() || !this.uploadDir.isDirectory()) {
 			throw new RuntimeException("Upload directory not found" + uploadDir);
 		}
 
-		File[] files = rootDir.listFiles();
+		this.thumbnailDir = new File(thumbnailDir);
+		if (this.thumbnailDir == null || !this.thumbnailDir.exists() || !this.thumbnailDir.isDirectory()) {
+			throw new RuntimeException("Thumbnail directory not found" + uploadDir);
+		}
+
+	}
+
+	@Override
+	public List<Document> getAllFilesAsDocuments() {
+		List<Document> results = new ArrayList<Document>();
+
+		File[] files = uploadDir.listFiles();
 		for (File file : files) {
 			if (file.isFile()) {
 				String fileName = file.getName();
@@ -76,116 +79,76 @@ public class FileSystemService implements DocumentService {
 				results.add(new Document(fileName, file.length(), mime, comment, creator));
 			}
 		}
+
+		logger.log(Level.INFO, "Files found: " + results.size());
+
 		return results;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see miretz.ycloud.services.DocumentService#deleteFile(java.lang.String)
-	 */
 	@Override
-	public boolean deleteFile(String fileName) {
-		databaseService.deleteFile(fileName);
-		File fileThumb = new File(thumbnailDir + fileName);
-		if (fileThumb.exists()) {
-			fileThumb.delete();
+	public boolean deleteFile(final String filename) {
+
+		databaseService.deleteFile(filename);
+
+		// delete thumbnail
+		File thumbnail = getFileFromDir(thumbnailDir, filename);
+		if (thumbnail != null) {
+			thumbnail.delete();
 		}
-		File file = new File(uploadDir + fileName);
-		return file.delete();
+
+		// delete file
+		File file = getFileFromDir(uploadDir, filename);
+		if (file != null) {
+			return file.delete();
+		}
+
+		return false;
+
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see miretz.ycloud.services.DocumentService#deleteAllFiles()
-	 */
 	@Override
 	public void deleteAllFiles() {
-		File uploadDirectory = new File(uploadDir);
-		if (uploadDirectory.exists() && uploadDirectory.isDirectory()) {
-			for (File file : uploadDirectory.listFiles()) {
-				databaseService.deleteFile(file.getName());
-				file.delete();
-			}
+
+		logger.entering(getClass().getName(), "Delete all files started!");
+
+		for (File file : uploadDir.listFiles()) {
+			databaseService.deleteFile(file.getName());
+			file.delete();
 		}
-		File thumbnailDirectory = new File(thumbnailDir);
-		if (thumbnailDirectory.exists() && thumbnailDirectory.isDirectory()) {
-			for (File file : thumbnailDirectory.listFiles())
-				file.delete();
+		for (File file : thumbnailDir.listFiles()) {
+			file.delete();
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * miretz.ycloud.services.DocumentService#getModifiedDate(java.lang.String)
-	 */
 	@Override
-	public String getModifiedDate(String fileName) {
-		SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
-		long timestamp = new File(uploadDir + fileName).lastModified();
+	public String getModifiedDate(String filename) {
+		File file = getFileFromDir(uploadDir, filename);
+		SimpleDateFormat sdf = new SimpleDateFormat(dateFormat);
+		long timestamp = file.lastModified();
 		return sdf.format(timestamp);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * miretz.ycloud.services.DocumentService#getFileResource(java.lang.String)
-	 */
 	@Override
-	public FileResource getFileResource(String fileName) {
-		return new FileResource(new File(uploadDir + fileName));
+	public FileResource getFileResource(String filename) {
+		return new FileResource(getFileFromDir(uploadDir, filename));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * miretz.ycloud.services.DocumentService#getFileInputStream(java.lang.String
-	 * )
-	 */
 	@Override
-	public InputStream getFileInputStream(String fileName) throws FileNotFoundException {
-		return new FileInputStream(uploadDir + fileName);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * miretz.ycloud.services.DocumentService#getThumbnailFileResource(java.
-	 * lang.String)
-	 */
-	@Override
-	public FileResource getThumbnailFileResource(String fileName) {
-		File thumbnail = new File(thumbnailDir + fileName);
-		if (thumbnail.exists() && thumbnail.isFile()) {
+	public FileResource getThumbnailFileResource(String filename) {
+		File thumbnail = getFileFromDir(thumbnailDir, filename);
+		if (thumbnail != null && thumbnail.exists() && thumbnail.isFile()) {
 			return new FileResource(thumbnail);
 		} else {
 			return null;
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see miretz.ycloud.services.DocumentService#getFreeSpace()
-	 */
 	@Override
 	public double getFreeSpace() {
-		File file = new File(uploadDir);
-		long freeSpace = file.getFreeSpace();
+		long freeSpace = uploadDir.getFreeSpace();
 		return getSizeInMbDouble(freeSpace);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see miretz.ycloud.services.DocumentService#getSizeOfFiles()
-	 */
 	@Override
 	public double getSizeOfFiles() {
 		long fileSizes = 0L;
@@ -195,11 +158,6 @@ public class FileSystemService implements DocumentService {
 		return getSizeInMbDouble(fileSizes);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see miretz.ycloud.services.DocumentService#getSizeInMbDouble(long)
-	 */
 	@Override
 	public double getSizeInMbDouble(long size) {
 		double sizeMb = size / 1024.0 / 1024.0;
@@ -215,16 +173,10 @@ public class FileSystemService implements DocumentService {
 		return name.substring(lastIndexOf + 1);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * miretz.ycloud.services.DocumentService#saveThumbnail(java.lang.String)
-	 */
 	@Override
 	public void saveThumbnail(String fileName) throws IOException {
-		checkThumbnailDir();
-		File imgFile = new File(uploadDir + fileName);
+
+		File imgFile = getFileFromDir(uploadDir, fileName);
 		String imgExtension = getFileExtension(imgFile);
 		if (Arrays.asList(IMAGE_FORMATS).contains(imgExtension)) {
 
@@ -237,42 +189,31 @@ public class FileSystemService implements DocumentService {
 			BufferedImage img = null;
 
 			if (sourceImage.getWidth() > sourceImage.getHeight()) {
-				scaled = sourceImage.getScaledInstance(-1, THUMB_DIMENSION.height, Image.SCALE_SMOOTH);
-				img = new BufferedImage(scaled.getWidth(null), THUMB_DIMENSION.height, BufferedImage.TYPE_INT_RGB);
-				xPos = (int) ((img.getWidth() / 2) - (THUMB_DIMENSION.getWidth() / 2));
+				scaled = sourceImage.getScaledInstance(-1, thumbnailDimensions.height, Image.SCALE_SMOOTH);
+				img = new BufferedImage(scaled.getWidth(null), thumbnailDimensions.height, BufferedImage.TYPE_INT_RGB);
+				xPos = (int) ((img.getWidth() / 2) - (thumbnailDimensions.getWidth() / 2));
 			} else {
-				scaled = sourceImage.getScaledInstance(THUMB_DIMENSION.width, -1, Image.SCALE_SMOOTH);
-				img = new BufferedImage(THUMB_DIMENSION.width, scaled.getHeight(null), BufferedImage.TYPE_INT_RGB);
-				yPos = (int) ((img.getHeight() / 2) - (THUMB_DIMENSION.getHeight() / 2));
+				scaled = sourceImage.getScaledInstance(thumbnailDimensions.width, -1, Image.SCALE_SMOOTH);
+				img = new BufferedImage(thumbnailDimensions.width, scaled.getHeight(null), BufferedImage.TYPE_INT_RGB);
+				yPos = (int) ((img.getHeight() / 2) - (thumbnailDimensions.getHeight() / 2));
 			}
 
 			img.createGraphics().drawImage(scaled, 0, 0, null);
-			BufferedImage cropped = img.getSubimage(xPos, yPos, THUMB_DIMENSION.width, THUMB_DIMENSION.height);
-			ImageIO.write(cropped, imgExtension, new File(thumbnailDir + fileName));
+			BufferedImage cropped = img.getSubimage(xPos, yPos, thumbnailDimensions.width, thumbnailDimensions.height);
+			ImageIO.write(cropped, imgExtension, new File(thumbnailDir.getAbsolutePath() + File.separator + fileName));
 		}
 
 	}
 
-	private void checkThumbnailDir() {
-		File temp = new File(thumbnailDir);
-		if (!temp.exists()) {
-			temp.mkdir();
-		}
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see miretz.ycloud.services.DocumentService#getAllFilesZip()
-	 */
 	@Override
 	public InputStream getAllFilesZip() {
 		try {
-			final File f = new File(uploadDir + "all_files.zip");
+			final File f = new File(uploadDir.getAbsolutePath() + File.separator + "all_files.zip");
 			if (f.exists() && f.isFile()) {
 				f.delete();
 			}
-			File[] files = new File(uploadDir).listFiles();
+
+			File[] files = uploadDir.listFiles();
 			final ZipOutputStream out = new ZipOutputStream(new FileOutputStream(f));
 			for (File file : files) {
 				if (file.isFile()) {
@@ -290,7 +231,8 @@ public class FileSystemService implements DocumentService {
 				}
 			}
 			out.close();
-			return new FileInputStream(uploadDir + f.getName());
+
+			return new FileInputStream(f);
 		} catch (FileNotFoundException e) {
 			logger.log(Level.SEVERE, "Zip file not found!", e);
 			return null;
@@ -298,6 +240,15 @@ public class FileSystemService implements DocumentService {
 			logger.log(Level.SEVERE, "Failed to create Zip file!", e1);
 			return null;
 		}
+	}
+
+	private File getFileFromDir(File dir, String filename) {
+		File file = null;
+		File[] files = dir.listFiles(new DirectoryFilenameFilter(filename));
+		if (files.length == 1) {
+			file = files[0];
+		}
+		return file;
 	}
 
 }

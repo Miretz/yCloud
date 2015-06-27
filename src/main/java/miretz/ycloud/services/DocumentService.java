@@ -1,6 +1,5 @@
 package miretz.ycloud.services;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -20,8 +19,6 @@ public interface DocumentService {
 	String getModifiedDate(String fileName);
 
 	FileResource getFileResource(String fileName);
-
-	InputStream getFileInputStream(String fileName) throws FileNotFoundException;
 
 	FileResource getThumbnailFileResource(String fileName);
 
