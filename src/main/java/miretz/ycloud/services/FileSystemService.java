@@ -14,16 +14,15 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import javax.imageio.ImageIO;
 import javax.inject.Singleton;
 
-import miretz.ycloud.models.Document;
 import miretz.ycloud.services.utils.DirectoryFilenameFilter;
+
+import org.apache.log4j.Logger;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -37,7 +36,6 @@ public class FileSystemService implements DocumentService {
 	protected static final String[] IMAGE_FORMATS = { "jpg", "png", "bmp", "gif" };
 	protected static final int BUFFER = 2048;
 
-	protected final DatabaseService databaseService;
 	protected final String dateFormat;
 	protected final Dimension thumbnailDimensions;
 
@@ -45,8 +43,8 @@ public class FileSystemService implements DocumentService {
 	protected final File uploadDir;
 
 	@Inject
-	public FileSystemService(@Named("thumbnailDir") String thumbnailDir, @Named("uploadDir") String uploadDir, @Named("dateFormat") String dateFormat, DatabaseService databaseService) {
-		this.databaseService = databaseService;
+	public FileSystemService(@Named("thumbnailDir") String thumbnailDir, @Named("uploadDir") String uploadDir, @Named("dateFormat") String dateFormat) {
+
 		this.dateFormat = dateFormat;
 		this.thumbnailDimensions = new Dimension(50, 50);
 
@@ -63,32 +61,7 @@ public class FileSystemService implements DocumentService {
 	}
 
 	@Override
-	public List<Document> getAllFilesAsDocuments() {
-		List<Document> results = new ArrayList<Document>();
-
-		File[] files = uploadDir.listFiles();
-		for (File file : files) {
-			if (file.isFile()) {
-				String fileName = file.getName();
-				String mime = getFileExtension(file).toLowerCase();
-				String comment = databaseService.getFileComment(fileName);
-				String creator = databaseService.getFileCreator(fileName);
-				if (creator == null || creator.isEmpty()) {
-					creator = "Admin";
-				}
-				results.add(new Document(fileName, file.length(), mime, comment, creator));
-			}
-		}
-
-		logger.log(Level.INFO, "Files found: " + results.size());
-
-		return results;
-	}
-
-	@Override
 	public boolean deleteFile(final String filename) {
-
-		databaseService.deleteFile(filename);
 
 		// delete thumbnail
 		File thumbnail = getFileFromDir(thumbnailDir, filename);
@@ -109,15 +82,17 @@ public class FileSystemService implements DocumentService {
 	@Override
 	public void deleteAllFiles() {
 
-		logger.entering(getClass().getName(), "Delete all files started!");
+		if (logger.isDebugEnabled()) {
+			logger.debug("Delete all files started!");
+		}
 
 		for (File file : uploadDir.listFiles()) {
-			databaseService.deleteFile(file.getName());
 			file.delete();
 		}
 		for (File file : thumbnailDir.listFiles()) {
 			file.delete();
 		}
+
 	}
 
 	@Override
@@ -152,8 +127,8 @@ public class FileSystemService implements DocumentService {
 	@Override
 	public double getSizeOfFiles() {
 		long fileSizes = 0L;
-		for (Document document : getAllFilesAsDocuments()) {
-			fileSizes += document.getSize();
+		for (File file : uploadDir.listFiles()) {
+			fileSizes += file.length();
 		}
 		return getSizeInMbDouble(fileSizes);
 	}
@@ -206,14 +181,18 @@ public class FileSystemService implements DocumentService {
 	}
 
 	@Override
-	public InputStream getAllFilesZip() {
+	public InputStream getAllFilesZip(List<String> filenames) {
 		try {
 			final File f = new File(uploadDir.getAbsolutePath() + File.separator + "all_files.zip");
 			if (f.exists() && f.isFile()) {
 				f.delete();
 			}
 
-			File[] files = uploadDir.listFiles();
+			List<File> files = new ArrayList<File>();
+			for (String filename : filenames) {
+				files.add(getFileFromDir(uploadDir, filename));
+			}
+
 			final ZipOutputStream out = new ZipOutputStream(new FileOutputStream(f));
 			for (File file : files) {
 				if (file.isFile()) {
@@ -234,10 +213,10 @@ public class FileSystemService implements DocumentService {
 
 			return new FileInputStream(f);
 		} catch (FileNotFoundException e) {
-			logger.log(Level.SEVERE, "Zip file not found!", e);
+			logger.error("Zip file not found!", e);
 			return null;
 		} catch (IOException e1) {
-			logger.log(Level.SEVERE, "Failed to create Zip file!", e1);
+			logger.error("Failed to create Zip file!", e1);
 			return null;
 		}
 	}
@@ -249,6 +228,16 @@ public class FileSystemService implements DocumentService {
 			file = files[0];
 		}
 		return file;
+	}
+
+	@Override
+	public File getFile(String fileName) {
+		return getFileFromDir(uploadDir, fileName);
+	}
+
+	@Override
+	public String getFileMimeType(String fileName) {
+		return getFileExtension(getFileFromDir(uploadDir, fileName)).toLowerCase();
 	}
 
 }

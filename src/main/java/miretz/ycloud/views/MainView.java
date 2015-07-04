@@ -1,12 +1,16 @@
 package miretz.ycloud.views;
 
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
+import miretz.ycloud.models.Document;
 import miretz.ycloud.services.DatabaseService;
 import miretz.ycloud.services.DocumentService;
 import miretz.ycloud.views.partials.FilesTable;
 import miretz.ycloud.views.partials.HeaderPanel;
 import miretz.ycloud.views.windows.ConfirmationWindow;
+import miretz.ycloud.views.windows.CreateFolderWindow;
 import miretz.ycloud.views.windows.UploadWindow;
 
 import com.google.inject.Inject;
@@ -39,34 +43,61 @@ public class MainView extends CustomComponent implements View {
 	private Label sizeStats;
 	private HeaderPanel header;
 	private Button uploadButton;
+	private Button createFolderButton;
+	private Button goToParentButton;
 	private Button downloadAllButton;
 	private Button deleteAllButton;
 	private Button reloadButton;
-	private FilesTable filesView;
-	
-	
+	private FilesTable filesTable;
+
 	protected String adminUser;
 	protected String uploadDir;
 	protected DocumentService documentService;
 	protected DatabaseService databaseService;
 
+	protected Document currentFolder;
+
 	@Inject
-	public MainView(@Named("adminUser") String adminUser, @Named("uploadDir") String uploadDir, DocumentService documentService, DatabaseService databaseService){
+	public MainView(@Named("adminUser") String adminUser, @Named("uploadDir") String uploadDir, DocumentService documentService, DatabaseService databaseService) {
 		this.adminUser = adminUser;
 		this.uploadDir = uploadDir;
 		this.documentService = documentService;
 		this.databaseService = databaseService;
+		this.currentFolder = databaseService.getDocument("root");
+	}
+
+	public void setCurrentFolder(Document document) {
+		this.currentFolder = document;
+		toggleGoToParentButton();
+	}
+
+	private void toggleGoToParentButton() {
+		goToParentButton.setVisible(!(currentFolder.getContentId().equals("root")));
+	}
+
+	public Document getCurrentFolder() {
+		return currentFolder;
+	}
+
+	public void goToParentFolder() {
+		if (!(currentFolder.getContentId().equals("root"))) {
+			this.currentFolder = databaseService.getDocument(currentFolder.getParentId());
+		}
+		toggleGoToParentButton();
 	}
 
 	public void initialize() {
 
 		sizeStats = new Label();
 		header = new HeaderPanel();
+		createFolderButton = new Button("Create Folder");
 		uploadButton = new Button("Upload File");
+		goToParentButton = new Button("Go to parent folder");
+		goToParentButton.setVisible(false);
 		downloadAllButton = new Button("Download .zip");
 		deleteAllButton = new Button("Delete All");
 		reloadButton = new Button("Refresh");
-		filesView = new FilesTable(this, documentService);
+		filesTable = new FilesTable(this, documentService, databaseService);
 
 		VerticalLayout vl = new VerticalLayout();
 		vl.setSpacing(true);
@@ -78,12 +109,12 @@ public class MainView extends CustomComponent implements View {
 		vl.addComponent(info);
 		vl.setComponentAlignment(info, Alignment.MIDDLE_CENTER);
 
-		HorizontalLayout buttons = new HorizontalLayout(uploadButton, reloadButton, downloadAllButton, deleteAllButton);
+		HorizontalLayout buttons = new HorizontalLayout(uploadButton, createFolderButton, goToParentButton, reloadButton, downloadAllButton, deleteAllButton);
 
 		vl.addComponent(buttons);
 		vl.setComponentAlignment(buttons, Alignment.MIDDLE_CENTER);
 
-		HorizontalLayout files = new HorizontalLayout(filesView);
+		HorizontalLayout files = new HorizontalLayout(filesTable);
 		// files.setMargin(true);
 		files.setSizeFull();
 		files.setImmediate(true);
@@ -112,7 +143,7 @@ public class MainView extends CustomComponent implements View {
 
 			@Override
 			public void buttonClick(ClickEvent event) {
-				UploadWindow uv = new UploadWindow(documentService, databaseService, uploadDir);
+				UploadWindow uv = new UploadWindow(documentService, databaseService, uploadDir, currentFolder);
 				UI.getCurrent().addWindow(uv);
 				uv.addCloseListener(new Window.CloseListener() {
 
@@ -120,7 +151,7 @@ public class MainView extends CustomComponent implements View {
 
 					@Override
 					public void windowClose(CloseEvent e) {
-						filesView.loadFiles();
+						filesTable.loadFiles();
 						generateStats();
 
 					}
@@ -128,6 +159,43 @@ public class MainView extends CustomComponent implements View {
 
 			}
 		});
+
+		createFolderButton.setDescription("Create Folder");
+		createFolderButton.addClickListener(new Button.ClickListener() {
+
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void buttonClick(ClickEvent event) {
+				CreateFolderWindow uv = new CreateFolderWindow(documentService, databaseService, uploadDir, currentFolder);
+				UI.getCurrent().addWindow(uv);
+				uv.addCloseListener(new Window.CloseListener() {
+
+					private static final long serialVersionUID = 1L;
+
+					@Override
+					public void windowClose(CloseEvent e) {
+						filesTable.loadFiles();
+						generateStats();
+
+					}
+				});
+
+			}
+		});
+
+		goToParentButton.setDescription("Go to Parent folder");
+		goToParentButton.addClickListener(new Button.ClickListener() {
+
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void buttonClick(ClickEvent event) {
+				goToParentFolder();
+				filesTable.loadFiles();
+			}
+		});
+
 		reloadButton.setIcon(new ThemeResource("img/reload.png"));
 		reloadButton.setDescription("Reload Files");
 		reloadButton.addClickListener(new Button.ClickListener() {
@@ -136,7 +204,7 @@ public class MainView extends CustomComponent implements View {
 
 			@Override
 			public void buttonClick(ClickEvent event) {
-				filesView.loadFiles();
+				filesTable.loadFiles();
 				generateStats();
 				Notification.show("Files reloaded", "", Notification.Type.HUMANIZED_MESSAGE);
 			}
@@ -145,8 +213,13 @@ public class MainView extends CustomComponent implements View {
 		StreamResource.StreamSource source = new StreamResource.StreamSource() {
 			private static final long serialVersionUID = 1L;
 
+			@Override
 			public InputStream getStream() {
-				return documentService.getAllFilesZip();
+				List<String> filenames = new ArrayList<String>();
+				for (Document doc : databaseService.getAllDocuments()) {
+					filenames.add(doc.getFileName());
+				}
+				return documentService.getAllFilesZip(filenames);
 			}
 		};
 		StreamResource sr = new StreamResource(source, "all_files.zip");
@@ -165,7 +238,7 @@ public class MainView extends CustomComponent implements View {
 			@Override
 			public void buttonClick(ClickEvent event) {
 
-				ConfirmationWindow confirmation = new ConfirmationWindow(null, ConfirmationWindow.Action.DELETE_ALL, documentService);
+				ConfirmationWindow confirmation = new ConfirmationWindow(databaseService.getDescendants(currentFolder.getContentId()), documentService, databaseService);
 
 				UI.getCurrent().addWindow(confirmation);
 
@@ -175,7 +248,7 @@ public class MainView extends CustomComponent implements View {
 
 					@Override
 					public void windowClose(CloseEvent e) {
-						filesView.loadFiles();
+						filesTable.loadFiles();
 						generateStats();
 					}
 				});
@@ -186,6 +259,6 @@ public class MainView extends CustomComponent implements View {
 	}
 
 	public void generateStats() {
-		sizeStats.setValue(username + " in " + uploadDir + " (" + documentService.getSizeOfFiles() + " / " + documentService.getFreeSpace() + " MB)");
+		sizeStats.setValue("CURRENT FOLDER: " + currentFolder.getFileName() + " " + username + " in " + uploadDir + " (" + documentService.getSizeOfFiles() + " / " + documentService.getFreeSpace() + " MB)");
 	}
 }

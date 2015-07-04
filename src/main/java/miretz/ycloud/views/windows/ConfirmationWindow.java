@@ -3,6 +3,7 @@ package miretz.ycloud.views.windows;
 import java.util.List;
 
 import miretz.ycloud.models.Document;
+import miretz.ycloud.services.DatabaseService;
 import miretz.ycloud.services.DocumentService;
 
 import com.vaadin.ui.Alignment;
@@ -17,48 +18,14 @@ import com.vaadin.ui.Window;
 @SuppressWarnings("serial")
 public class ConfirmationWindow extends Window {
 
-	protected DocumentService documentService;
-
-	public enum Action {
-		DELETE, DELETE_ALL;
-	}
-
-	public ConfirmationWindow(String fileName, final Action action, DocumentService documentService) {
+	public ConfirmationWindow(final List<Document> documents, final DocumentService documentService, final DatabaseService databaseService) {
 
 		super("User confirmation required");
 
-		this.documentService = documentService;
-
 		center();
 
-		String text = "";
-
-		switch (action) {
-		case DELETE:
-
-			text = "Are you sure you want to delete " + fileName + " ?";
-
-			break;
-
-		case DELETE_ALL:
-
-			List<Document> allFiles = documentService.getAllFilesAsDocuments();
-
-			StringBuilder sb = new StringBuilder();
-
-			for (Document doc : allFiles) {
-				sb.append(doc.getFileName());
-				sb.append("\n");
-			}
-			fileName = sb.toString();
-
-			text = "Files to delete: \n" + fileName;
-
-			break;
-
-		default:
-			break;
-		}
+		final String filesToDelete = filenamesToString(documents);
+		final String text = "Files to delete: \n" + filesToDelete;
 
 		// Some basic content for the window
 		VerticalLayout content = new VerticalLayout();
@@ -73,12 +40,14 @@ public class ConfirmationWindow extends Window {
 		// buttons
 		HorizontalLayout buttons = new HorizontalLayout();
 
-		final String fileNameFinal = fileName;
-
 		Button yes = new Button("Yes", new Button.ClickListener() {
 			@Override
 			public void buttonClick(ClickEvent event) {
-				executeAction(action, fileNameFinal);
+				for (Document document : documents) {
+					documentService.deleteFile(document.getFileName());
+					databaseService.deleteDocument(document.getContentId());
+				}
+				Notification.show("Files Deleted:", filesToDelete, Notification.Type.HUMANIZED_MESSAGE);
 				close();
 			}
 		});
@@ -96,24 +65,13 @@ public class ConfirmationWindow extends Window {
 
 	}
 
-	private void executeAction(Action action, String fileName) {
-		switch (action) {
-		case DELETE:
-
-			documentService.deleteFile(fileName);
-			Notification.show("File Deleted:", fileName, Notification.Type.HUMANIZED_MESSAGE);
-			break;
-
-		case DELETE_ALL:
-
-			documentService.deleteAllFiles();
-			Notification.show("Files deleted: ", fileName, Notification.Type.HUMANIZED_MESSAGE);
-			break;
-
-		default:
-			break;
+	private String filenamesToString(final List<Document> documents) {
+		StringBuilder sb = new StringBuilder();
+		for (Document doc : documents) {
+			sb.append(doc.getFileName());
+			sb.append("\n");
 		}
-
+		return sb.toString();
 	}
 
 }

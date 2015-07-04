@@ -1,16 +1,13 @@
 package miretz.ycloud.services;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
-import miretz.ycloud.models.Document;
-
 import com.vaadin.server.FileResource;
 
 public interface DocumentService {
-
-	List<Document> getAllFilesAsDocuments();
 
 	boolean deleteFile(String fileName);
 
@@ -30,6 +27,10 @@ public interface DocumentService {
 
 	void saveThumbnail(String fileName) throws IOException;
 
-	InputStream getAllFilesZip();
+	InputStream getAllFilesZip(List<String> filenames);
+
+	File getFile(String fileName);
+
+	String getFileMimeType(String fileName);
 
 }

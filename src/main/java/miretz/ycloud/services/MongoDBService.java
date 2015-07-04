@@ -5,7 +5,10 @@ import static com.mongodb.client.model.Filters.eq;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.inject.Singleton;
 
@@ -69,6 +72,11 @@ public class MongoDBService implements DatabaseService {
 		}
 
 		adminUserSetup();
+		rootFolderSetup();
+	}
+
+	public void rootFolderSetup() {
+		addDocument(new miretz.ycloud.models.Document("root", "root", "", new HashMap<String, String>(), miretz.ycloud.models.Document.TYPE_FOLDER));
 	}
 
 	public void adminUserSetup() {
@@ -140,42 +148,120 @@ public class MongoDBService implements DatabaseService {
 		return result;
 	}
 
+	/**
+	 * DOCUMENT METHODS
+	 */
+
 	@Override
-	public void addFile(String fileName, String comment, String creator) {
+	public void deleteDocument(String contentId) {
+
+		MongoCollection<Document> table = database.getCollection(filesDbTableName);
+
+		// delete all children
+		table.deleteMany(eq("parentId", contentId));
+
+		// delete the document
+		table.deleteOne(eq("contentId", contentId));
+
+	}
+
+	@Override
+	public void addDocument(miretz.ycloud.models.Document documentToStore) {
 		MongoCollection<Document> table = database.getCollection(filesDbTableName);
 
 		Document document = new Document();
-		document.put("fileName", fileName);
-		document.put("comment", comment);
-		document.put("creator", creator);
-		document.put("createdDate", new Date());
+		document.append("contentId", documentToStore.getContentId());
+		document.append("fileName", documentToStore.getFileName());
+		document.append("parentId", documentToStore.getParentId());
+		document.append("type", documentToStore.getType());
+
+		Document metadata = new Document();
+		for (Entry<String, String> entry : documentToStore.getMetadata().entrySet()) {
+			metadata.append(entry.getKey(), entry.getValue());
+		}
+		document.append("metadata", metadata);
+		document.append("createdDate", new Date());
 
 		table.insertOne(document);
+
 	}
 
 	@Override
-	public void deleteFile(String fileName) {
+	public List<miretz.ycloud.models.Document> getAllDocuments() {
 		MongoCollection<Document> table = database.getCollection(filesDbTableName);
-		table.deleteOne(eq("fileName", fileName));
-	}
+		List<miretz.ycloud.models.Document> result = new ArrayList<>();
 
-	public String getFileParameter(String fileName, String parameter) {
-		MongoCollection<Document> table = database.getCollection(filesDbTableName);
-		Document myDoc = table.find(eq("fileName", fileName)).first();
-		if (myDoc == null) {
-			return "";
+		for (Document document : table.find()) {
+			result.add(getDocument(document));
 		}
-		return myDoc.getString(parameter);
+
+		return result;
 	}
 
 	@Override
-	public String getFileComment(String fileName) {
-		return getFileParameter(fileName, "comment");
+	public List<miretz.ycloud.models.Document> getDescendants(String parentId) {
+		MongoCollection<Document> table = database.getCollection(filesDbTableName);
+
+		List<miretz.ycloud.models.Document> result = new ArrayList<>();
+
+		FindIterable<Document> myDoc = table.find(eq("parentId", parentId));
+
+		if (myDoc == null) {
+			return result;
+		}
+
+		for (Document document : myDoc) {
+			result.add(getDocument(document));
+		}
+
+		return result;
+
 	}
 
 	@Override
-	public String getFileCreator(String fileName) {
-		return getFileParameter(fileName, "creator");
+	public miretz.ycloud.models.Document getDocument(String contentId) {
+
+		MongoCollection<Document> table = database.getCollection(filesDbTableName);
+
+		Document document = table.find(eq("contentId", contentId)).first();
+
+		if (document != null) {
+			return getDocument(document);
+
+		}
+
+		return null;
+
 	}
 
+	private Map<String, String> getMetadataAsMap(Document document) {
+		Map<String, String> metadataMap = new HashMap<>();
+		for (Entry<String, Object> entry : document.get("metadata", Document.class).entrySet()) {
+			metadataMap.put(entry.getKey(), (String) entry.getValue());
+		}
+		return metadataMap;
+	}
+
+	@Override
+	public miretz.ycloud.models.Document findByMetadataValue(String key, String value) {
+		MongoCollection<Document> table = database.getCollection(filesDbTableName);
+
+		Document document = table.find(eq(key, value)).first();
+
+		if (document != null) {
+			return getDocument(document);
+		}
+
+		return null;
+	}
+
+	private miretz.ycloud.models.Document getDocument(Document document) {
+		return new miretz.ycloud.models.Document(document.getString("contentId"), document.getString("fileName"), document.getString("parentId"), getMetadataAsMap(document), document.getString("type"));
+	}
+
+	@Override
+	public void deleteAllDocuments() {
+		MongoCollection<Document> table = database.getCollection(filesDbTableName);
+		table.drop();
+	}
 }

@@ -1,39 +1,45 @@
 package miretz.ycloud.models;
 
+import java.util.Map;
+
 public class Document {
 
-	private final String fileName;
-	private final String comment;
-	private final String creator;
-	private final long size;
-	private final String mimeType;
+	public static final String TYPE_FILE = "file";
+	public static final String TYPE_FOLDER = "folder";
 
-	public Document(final String fileName, final long size, final String mimeType, final String comment, final String creator) {
+	private final String contentId;
+	private final String fileName;
+	private final String parentId;
+	private final Map<String, String> metadata;
+	private final String type;
+
+	public Document(String contentId, String fileName, String parentId, Map<String, String> metadata, String type) {
+		super();
+		this.contentId = contentId;
 		this.fileName = fileName;
-		this.size = size;
-		this.mimeType = mimeType;
-		this.comment = comment;
-		this.creator = creator;
+		this.parentId = parentId;
+		this.metadata = metadata;
+		this.type = type;
 	}
 
-	public String getCreator() {
-		return creator;
+	public String getContentId() {
+		return contentId;
 	}
 
 	public String getFileName() {
 		return fileName;
 	}
 
-	public long getSize() {
-		return size;
+	public String getParentId() {
+		return parentId;
 	}
 
-	public String getMimeType() {
-		return mimeType;
+	public Map<String, String> getMetadata() {
+		return metadata;
 	}
 
-	public String getComment() {
-		return comment;
+	public String getType() {
+		return type;
 	}
 
 }
