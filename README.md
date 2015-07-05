@@ -1,6 +1,7 @@
 ycloud
 ==============
 
+This is the kotlin branch of yCloud.
 
 File storage application using Vaadin Framework, Google Guice and MongoDB
 
