@@ -105,15 +105,14 @@ public class FilesTable extends Table {
 	}
 
 	private void addFileToTable(int counter, final Document document) {
-		File file = documentService.getFile(document.getFileName());
+		File file = documentService.getFile(document);
 
-		final String fileName = document.getFileName();
 		final Double size = documentService.getSizeInMbDouble(file.length());
 
-		String mimeType = documentService.getFileMimeType(document.getFileName());
+		String mimeType = documentService.getFileMimeType(document);
 
 		Image thumbnail = null;
-		FileResource thumbnailResource = documentService.getThumbnailFileResource(fileName);
+		FileResource thumbnailResource = documentService.getThumbnailFileResource(document);
 		if (thumbnailResource != null) {
 			thumbnail = new Image(null, thumbnailResource);
 			thumbnail.addStyleName("cursor-pointer");
@@ -125,10 +124,10 @@ public class FilesTable extends Table {
 				public void click(com.vaadin.event.MouseEvents.ClickEvent event) {
 					if (lightboxWindowClosed) {
 						lightboxWindowClosed = false;
-						lw.setImage(fileName);
+						lw.setImage(document);
 						UI.getCurrent().addWindow(lw);
 					} else {
-						lw.setImage(fileName);
+						lw.setImage(document);
 						lw.setImmediate(true);
 					}
 				}
@@ -140,12 +139,13 @@ public class FilesTable extends Table {
 			thumbnail = new Image(null, resource);
 		}
 
-		String modified = documentService.getModifiedDate(fileName);
+		String modified = documentService.getModifiedDate(document);
 
-		Button download = new Button(fileName);
-		FileResource downloadResource = documentService.getFileResource(fileName);
+		Button download = new Button(document.getFileName());
+		FileResource downloadResource = documentService.getFileResource(document);
 		FileDownloader fileDownloader = new FileDownloader(downloadResource);
 		fileDownloader.extend(download);
+
 		download.addStyleName(ValoTheme.BUTTON_LINK);
 		download.addStyleName("fileLink");
 		download.setComponentError(null);

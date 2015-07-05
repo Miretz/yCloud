@@ -5,19 +5,21 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
+import miretz.ycloud.models.Document;
+
 import com.vaadin.server.FileResource;
 
 public interface DocumentService {
 
-	boolean deleteFile(String fileName);
+	boolean deleteFile(Document document);
 
 	void deleteAllFiles();
 
-	String getModifiedDate(String fileName);
+	String getModifiedDate(Document document);
 
-	FileResource getFileResource(String fileName);
+	FileResource getFileResource(Document document);
 
-	FileResource getThumbnailFileResource(String fileName);
+	FileResource getThumbnailFileResource(Document document);
 
 	double getFreeSpace();
 
@@ -25,12 +27,12 @@ public interface DocumentService {
 
 	double getSizeInMbDouble(long size);
 
-	void saveThumbnail(String fileName) throws IOException;
+	void saveThumbnail(Document document) throws IOException;
 
-	InputStream getAllFilesZip(List<String> filenames);
+	InputStream getAllFilesZip(List<Document> documents);
 
-	File getFile(String fileName);
+	File getFile(Document document);
 
-	String getFileMimeType(String fileName);
+	String getFileMimeType(Document document);
 
 }

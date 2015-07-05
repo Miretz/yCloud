@@ -1,5 +1,6 @@
 package miretz.ycloud.views.windows;
 
+import miretz.ycloud.models.Document;
 import miretz.ycloud.services.DocumentService;
 
 import com.vaadin.event.MouseEvents;
@@ -12,7 +13,7 @@ import com.vaadin.ui.Window;
 public class LightboxWindow extends Window {
 
 	protected DocumentService documentService;
-	
+
 	private static final long serialVersionUID = 1L;
 
 	public LightboxWindow(DocumentService documentService) {
@@ -21,17 +22,17 @@ public class LightboxWindow extends Window {
 		this.documentService = documentService;
 	}
 
-	public void setImage(final String fileName) {
+	public void setImage(final Document document) {
 
-		setCaption("Image Preview: " + fileName);
-		
+		setCaption("Image Preview: " + document.getFileName());
+
 		HorizontalLayout layout = new HorizontalLayout();
 		setContent(layout);
 
 		layout.setSizeFull();
 		layout.setImmediate(true);
 
-		Image image = new Image(null, documentService.getFileResource(fileName));
+		Image image = new Image(null, documentService.getFileResource(document));
 		layout.addComponent(image);
 		layout.setComponentAlignment(image, Alignment.MIDDLE_CENTER);
 
@@ -48,7 +49,7 @@ public class LightboxWindow extends Window {
 
 		});
 
-		setSizeFull();		
+		setSizeFull();
 		setImmediate(true);
 
 	}

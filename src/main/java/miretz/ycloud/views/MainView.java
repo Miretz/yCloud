@@ -1,8 +1,6 @@
 package miretz.ycloud.views;
 
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
 
 import miretz.ycloud.models.Document;
 import miretz.ycloud.services.DatabaseService;
@@ -215,14 +213,10 @@ public class MainView extends CustomComponent implements View {
 
 			@Override
 			public InputStream getStream() {
-				List<String> filenames = new ArrayList<String>();
-				for (Document doc : databaseService.getAllDocuments()) {
-					filenames.add(doc.getFileName());
-				}
-				return documentService.getAllFilesZip(filenames);
+				return documentService.getAllFilesZip(databaseService.getDescendants(currentFolder.getContentId()));
 			}
 		};
-		StreamResource sr = new StreamResource(source, "all_files.zip");
+		StreamResource sr = new StreamResource(source, currentFolder.getFileName() + "_all_files.zip");
 		FileDownloader fileDownloader = new FileDownloader(sr);
 		downloadAllButton.setIcon(new ThemeResource("img/zip.png"));
 		downloadAllButton.setDescription("Download all as zip");

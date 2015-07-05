@@ -72,6 +72,8 @@ public class UploadWindow extends Window {
 		class FileUploader implements Receiver, SucceededListener {
 			private static final long serialVersionUID = 1L;
 			public File file;
+			public String filename;
+			public String uid;
 
 			@Override
 			public OutputStream receiveUpload(String filename, String mimeType) {
@@ -80,7 +82,9 @@ public class UploadWindow extends Window {
 					if (filename == null || filename.isEmpty()) {
 						throw new FileNotFoundException("No File Selected!");
 					}
-					file = new File(uploadDir + filename);
+					this.filename = filename;
+					this.uid = UUID.randomUUID().toString();
+					file = new File(uploadDir + uid);
 					fos = new FileOutputStream(file);
 				} catch (final java.io.FileNotFoundException e) {
 					new Notification("Could not open file", e.getMessage(), Notification.Type.ERROR_MESSAGE).show(Page.getCurrent());
@@ -95,13 +99,14 @@ public class UploadWindow extends Window {
 				UI.getCurrent().setPollInterval(-1);
 				try {
 					String creator = String.valueOf(getSession().getAttribute("user"));
-					documentService.saveThumbnail(event.getFilename());
 
 					Map<String, String> metadata = new HashMap<>();
 					metadata.put("creator", creator);
 					metadata.put("comment", commentField.getValue());
 
-					Document document = new Document(UUID.randomUUID().toString(), event.getFilename(), currentFolder.getContentId(), metadata, Document.TYPE_FILE);
+					Document document = new Document(uid, filename, currentFolder.getContentId(), metadata, Document.TYPE_FILE);
+
+					documentService.saveThumbnail(document);
 
 					databaseService.addDocument(document);
 				} catch (IOException e) {

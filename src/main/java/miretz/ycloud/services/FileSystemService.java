@@ -20,6 +20,8 @@ import java.util.zip.ZipOutputStream;
 import javax.imageio.ImageIO;
 import javax.inject.Singleton;
 
+import miretz.ycloud.models.Document;
+import miretz.ycloud.services.utils.CustomNameFileResource;
 import miretz.ycloud.services.utils.DirectoryFilenameFilter;
 
 import org.apache.log4j.Logger;
@@ -61,16 +63,18 @@ public class FileSystemService implements DocumentService {
 	}
 
 	@Override
-	public boolean deleteFile(final String filename) {
+	public boolean deleteFile(final Document document) {
+
+		String contentId = document.getContentId();
 
 		// delete thumbnail
-		File thumbnail = getFileFromDir(thumbnailDir, filename);
+		File thumbnail = getFileFromDir(thumbnailDir, contentId);
 		if (thumbnail != null) {
 			thumbnail.delete();
 		}
 
 		// delete file
-		File file = getFileFromDir(uploadDir, filename);
+		File file = getFileFromDir(uploadDir, contentId);
 		if (file != null) {
 			return file.delete();
 		}
@@ -96,21 +100,21 @@ public class FileSystemService implements DocumentService {
 	}
 
 	@Override
-	public String getModifiedDate(String filename) {
-		File file = getFileFromDir(uploadDir, filename);
+	public String getModifiedDate(Document document) {
+		File file = getFileFromDir(uploadDir, document.getContentId());
 		SimpleDateFormat sdf = new SimpleDateFormat(dateFormat);
 		long timestamp = file.lastModified();
 		return sdf.format(timestamp);
 	}
 
 	@Override
-	public FileResource getFileResource(String filename) {
-		return new FileResource(getFileFromDir(uploadDir, filename));
+	public FileResource getFileResource(Document document) {
+		return new CustomNameFileResource(getFileFromDir(uploadDir, document.getContentId()), document.getFileName());
 	}
 
 	@Override
-	public FileResource getThumbnailFileResource(String filename) {
-		File thumbnail = getFileFromDir(thumbnailDir, filename);
+	public FileResource getThumbnailFileResource(Document document) {
+		File thumbnail = getFileFromDir(thumbnailDir, document.getContentId());
 		if (thumbnail != null && thumbnail.exists() && thumbnail.isFile()) {
 			return new FileResource(thumbnail);
 		} else {
@@ -139,20 +143,11 @@ public class FileSystemService implements DocumentService {
 		return Math.round(sizeMb * 100.0) / 100.0;
 	}
 
-	private String getFileExtension(File file) {
-		String name = file.getName();
-		int lastIndexOf = name.lastIndexOf(".");
-		if (lastIndexOf == -1) {
-			return ""; // empty extension
-		}
-		return name.substring(lastIndexOf + 1);
-	}
-
 	@Override
-	public void saveThumbnail(String fileName) throws IOException {
+	public void saveThumbnail(Document document) throws IOException {
 
-		File imgFile = getFileFromDir(uploadDir, fileName);
-		String imgExtension = getFileExtension(imgFile);
+		File imgFile = getFileFromDir(uploadDir, document.getContentId());
+		String imgExtension = getFileMimeType(document);
 		if (Arrays.asList(IMAGE_FORMATS).contains(imgExtension)) {
 
 			BufferedImage sourceImage = ImageIO.read(imgFile);
@@ -175,13 +170,13 @@ public class FileSystemService implements DocumentService {
 
 			img.createGraphics().drawImage(scaled, 0, 0, null);
 			BufferedImage cropped = img.getSubimage(xPos, yPos, thumbnailDimensions.width, thumbnailDimensions.height);
-			ImageIO.write(cropped, imgExtension, new File(thumbnailDir.getAbsolutePath() + File.separator + fileName));
+			ImageIO.write(cropped, imgExtension, new File(thumbnailDir.getAbsolutePath() + File.separator + document.getContentId()));
 		}
 
 	}
 
 	@Override
-	public InputStream getAllFilesZip(List<String> filenames) {
+	public InputStream getAllFilesZip(List<Document> documents) {
 		try {
 			final File f = new File(uploadDir.getAbsolutePath() + File.separator + "all_files.zip");
 			if (f.exists() && f.isFile()) {
@@ -189,8 +184,8 @@ public class FileSystemService implements DocumentService {
 			}
 
 			List<File> files = new ArrayList<File>();
-			for (String filename : filenames) {
-				files.add(getFileFromDir(uploadDir, filename));
+			for (Document doc : documents) {
+				files.add(getFileFromDir(uploadDir, doc.getContentId()));
 			}
 
 			final ZipOutputStream out = new ZipOutputStream(new FileOutputStream(f));
@@ -221,9 +216,9 @@ public class FileSystemService implements DocumentService {
 		}
 	}
 
-	private File getFileFromDir(File dir, String filename) {
+	private File getFileFromDir(File dir, String contentId) {
 		File file = null;
-		File[] files = dir.listFiles(new DirectoryFilenameFilter(filename));
+		File[] files = dir.listFiles(new DirectoryFilenameFilter(contentId));
 		if (files.length == 1) {
 			file = files[0];
 		}
@@ -231,13 +226,18 @@ public class FileSystemService implements DocumentService {
 	}
 
 	@Override
-	public File getFile(String fileName) {
-		return getFileFromDir(uploadDir, fileName);
+	public File getFile(Document document) {
+		return getFileFromDir(uploadDir, document.getContentId());
 	}
 
 	@Override
-	public String getFileMimeType(String fileName) {
-		return getFileExtension(getFileFromDir(uploadDir, fileName)).toLowerCase();
+	public String getFileMimeType(Document document) {
+		String name = document.getFileName();
+		int lastIndexOf = name.lastIndexOf(".");
+		if (lastIndexOf == -1) {
+			return ""; // empty extension
+		}
+		return name.substring(lastIndexOf + 1);
 	}
 
 }

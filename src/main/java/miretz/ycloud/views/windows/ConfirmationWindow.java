@@ -44,7 +44,7 @@ public class ConfirmationWindow extends Window {
 			@Override
 			public void buttonClick(ClickEvent event) {
 				for (Document document : documents) {
-					documentService.deleteFile(document.getFileName());
+					documentService.deleteFile(document);
 					databaseService.deleteDocument(document.getContentId());
 				}
 				Notification.show("Files Deleted:", filesToDelete, Notification.Type.HUMANIZED_MESSAGE);
