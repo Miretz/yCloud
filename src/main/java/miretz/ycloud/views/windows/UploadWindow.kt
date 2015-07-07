@@ -28,12 +28,16 @@ import com.vaadin.ui.Upload.SucceededEvent
 import com.vaadin.ui.Upload.SucceededListener
 import com.vaadin.ui.VerticalLayout
 import com.vaadin.ui.Window
+import java.nio.file.Path
+import java.nio.file.Paths
 
 public class UploadWindow(documentService: DocumentService, databaseService: DatabaseService, uploadDir: String, currentFolder: Document) : Window("Upload File") {
 
     private val upload: Upload
     private val bar = ProgressBar()
     private val uploadCaption = Label("Uploading in progress. Please wait...")
+    private val filenameLabel = Label("File Name:")
+    private val filenameField = TextField()
     private val commentLabel = Label("File comment:")
     private val commentField = TextField()
 
@@ -46,7 +50,6 @@ public class UploadWindow(documentService: DocumentService, databaseService: Dat
         setContent(content)
         content.setWidth("310px")
 
-        // Disable the close button
         setClosable(true)
         setResizable(false)
         setModal(true)
@@ -64,12 +67,10 @@ public class UploadWindow(documentService: DocumentService, databaseService: Dat
 
         class FileUploader : Receiver, SucceededListener {
             public var file: File? = null
-            public var filename: String = ""
             public var uid: String = ""
 
             override fun receiveUpload(filenameV: String?, mimeType: String): OutputStream {
                 try {
-                    filename = filenameV ?: throw FileNotFoundException("No File Selected!")
                     uid = UUID.randomUUID().toString()
                     file = File(uploadDir + uid)
                 } catch (e: java.io.FileNotFoundException) {
@@ -90,7 +91,7 @@ public class UploadWindow(documentService: DocumentService, databaseService: Dat
                 metadata.put("creator", creator)
                 metadata.put("comment", commentField.getValue())
 
-                val document = Document(uid, filename, currentFolder.contentId, metadata, Document.TYPE_FILE)
+                val document = Document(uid, filenameField.getValue(), currentFolder.contentId, metadata, Document.TYPE_FILE)
 
                 documentService.saveThumbnail(document)
 
@@ -128,11 +129,25 @@ public class UploadWindow(documentService: DocumentService, databaseService: Dat
                 commentLabel.setVisible(false)
             }
         })
+        upload.addChangeListener(object : Upload.ChangeListener {
+            override fun filenameChanged(event: Upload.ChangeEvent?) {
+                val filename = event?.getFilename() ?: ""
+                val p = Paths.get(filename)
+                filenameField.setValue(p.getFileName().toString())
+            }
+
+        })
 
         commentLabel.setVisible(true)
         commentField.setVisible(true)
         commentField.setWidth("250px")
 
+        filenameLabel.setVisible(true)
+        filenameField.setVisible(true)
+        filenameField.setWidth("250px")
+
+        content.addComponent(filenameLabel)
+        content.addComponent(filenameField)
         content.addComponent(commentLabel)
         content.addComponent(commentField)
         content.addComponent(upload)
