@@ -15,19 +15,11 @@ import miretz.ycloud.services.DocumentService
 import org.apache.log4j.Logger
 
 import com.vaadin.server.Page
-import com.vaadin.ui.Alignment
-import com.vaadin.ui.Label
-import com.vaadin.ui.Notification
-import com.vaadin.ui.ProgressBar
-import com.vaadin.ui.TextField
-import com.vaadin.ui.UI
-import com.vaadin.ui.Upload
+import com.vaadin.ui.*
 import com.vaadin.ui.Upload.Receiver
 import com.vaadin.ui.Upload.StartedEvent
 import com.vaadin.ui.Upload.SucceededEvent
 import com.vaadin.ui.Upload.SucceededListener
-import com.vaadin.ui.VerticalLayout
-import com.vaadin.ui.Window
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -40,6 +32,7 @@ public class UploadWindow(documentService: DocumentService, databaseService: Dat
     private val filenameField = TextField()
     private val commentLabel = Label("File comment:")
     private val commentField = TextField()
+    private val uploadButton = Button("Upload file")
 
     init {
         center()
@@ -47,6 +40,7 @@ public class UploadWindow(documentService: DocumentService, databaseService: Dat
         // Some basic content for the window
         val content = VerticalLayout()
         content.setMargin(true)
+        content.setSpacing(true)
         setContent(content)
         content.setWidth("310px")
 
@@ -103,9 +97,9 @@ public class UploadWindow(documentService: DocumentService, databaseService: Dat
         }
 
         val receiver = FileUploader()
-        upload = Upload("Please select your file.", receiver)
+        upload = Upload("Please select your file:", receiver)
         upload.addSucceededListener(receiver)
-        upload.setButtonCaption("Upload")
+        upload.setButtonCaption(null)
         upload.setWidth("300px")
 
         // for mobile devices
@@ -127,6 +121,8 @@ public class UploadWindow(documentService: DocumentService, databaseService: Dat
                 bar.setValue(0f)
                 commentField.setVisible(false)
                 commentLabel.setVisible(false)
+                filenameLabel.setVisible(false)
+                filenameField.setVisible(false)
             }
         })
         upload.addChangeListener(object : Upload.ChangeListener {
@@ -146,11 +142,21 @@ public class UploadWindow(documentService: DocumentService, databaseService: Dat
         filenameField.setVisible(true)
         filenameField.setWidth("250px")
 
+        content.addComponent(upload)
         content.addComponent(filenameLabel)
         content.addComponent(filenameField)
         content.addComponent(commentLabel)
         content.addComponent(commentField)
-        content.addComponent(upload)
+
+        uploadButton.setWidth("100px")
+        uploadButton.addClickListener(object : Button.ClickListener {
+
+            override fun buttonClick(event: Button.ClickEvent) {
+                upload.submitUpload()
+            }
+        })
+
+        content.addComponent(uploadButton)
 
     }
 
