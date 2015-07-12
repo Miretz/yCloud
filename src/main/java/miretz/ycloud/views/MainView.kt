@@ -33,23 +33,34 @@ import com.vaadin.ui.themes.ValoTheme
 
 public class MainView
 @Inject
-constructor(Named("adminUser") protected var adminUser: String, Named("uploadDir") protected var uploadDir: String, protected var documentService: DocumentService, protected var databaseService: DatabaseService) : CustomComponent(), View {
+constructor(Named("adminUser") protected var adminUser: String, Named("uploadDir") protected var uploadDir: String, protected val documentService: DocumentService, protected val databaseService: DatabaseService) : CustomComponent(), View {
 
     private var username = ""
-    private var sizeStats: Label? = null
-    private var header: HeaderPanel? = null
-    private var uploadButton: Button? = null
-    private var createFolderButton: Button? = null
-    private var goToParentButton: Button? = null
-    private var downloadAllButton: Button? = null
-    private var deleteAllButton: Button? = null
-    private var reloadButton: Button? = null
-    private var filesTable: FilesTable? = null
-
     public var currentFolder: Document
+
+    private val sizeStats: Label
+    private val header: HeaderPanel
+    private val uploadButton: Button
+    private val createFolderButton: Button
+    private val goToParentButton: Button
+    private val downloadAllButton: Button
+    private val deleteAllButton: Button
+    private val reloadButton: Button
+    private val filesTable: FilesTable
 
     init {
         this.currentFolder = databaseService.findDocument("root")
+
+        this.sizeStats = Label()
+        this.header = HeaderPanel()
+        this.uploadButton = Button("Upload File")
+        this.createFolderButton = Button("Create Folder")
+        this.goToParentButton = Button("Go to parent folder")
+        this.downloadAllButton =  Button("Download .zip")
+        this.deleteAllButton = Button("Delete All")
+        this.reloadButton = Button("Reload")
+
+        this.filesTable = FilesTable(this, documentService, databaseService)
     }
 
     public fun changeCurrentFolder(document: Document) {
@@ -58,7 +69,7 @@ constructor(Named("adminUser") protected var adminUser: String, Named("uploadDir
     }
 
     private fun toggleGoToParentButton() {
-        goToParentButton!!.setVisible(currentFolder.contentId != "root")
+        goToParentButton.setVisible(currentFolder.contentId != "root")
     }
 
     public fun goToParentFolder() {
@@ -70,21 +81,11 @@ constructor(Named("adminUser") protected var adminUser: String, Named("uploadDir
 
     public fun initialize() {
 
-        sizeStats = Label()
-        header = HeaderPanel()
-        createFolderButton = Button("Create Folder")
-        uploadButton = Button("Upload File")
-        goToParentButton = Button("Go to parent folder")
-        goToParentButton!!.setVisible(false)
-        downloadAllButton = Button("Download .zip")
-        deleteAllButton = Button("Delete All")
-        reloadButton = Button("Refresh")
-        filesTable = FilesTable(this, documentService, databaseService)
+        goToParentButton.setVisible(false)
 
         val vl = VerticalLayout()
         vl.setSpacing(true)
         vl.setSizeFull()
-
         vl.addComponent(header)
 
         val info = HorizontalLayout(sizeStats)
@@ -109,16 +110,16 @@ constructor(Named("adminUser") protected var adminUser: String, Named("uploadDir
 
         initialize()
 
-        header!!.enableLogout()
+        header.enableLogout()
         username = (getSession().getAttribute("user")) as String
         if (username == adminUser) {
-            header!!.enableUsers()
+            header.enableUsers()
         }
 
-        uploadButton!!.setStyleName(ValoTheme.BUTTON_FRIENDLY)
-        uploadButton!!.setIcon(ThemeResource("img/upload.png"))
-        uploadButton!!.setDescription("Upload File")
-        uploadButton!!.addClickListener(object : Button.ClickListener {
+        uploadButton.setStyleName(ValoTheme.BUTTON_FRIENDLY)
+        uploadButton.setIcon(ThemeResource("img/upload.png"))
+        uploadButton.setDescription("Upload File")
+        uploadButton.addClickListener(object : Button.ClickListener {
 
             override fun buttonClick(event: ClickEvent) {
                 val uv = UploadWindow(documentService, databaseService, uploadDir, currentFolder)
@@ -126,7 +127,7 @@ constructor(Named("adminUser") protected var adminUser: String, Named("uploadDir
                 uv.addCloseListener(object : Window.CloseListener {
 
                     override fun windowClose(e: CloseEvent) {
-                        filesTable!!.loadFiles()
+                        filesTable.loadFiles()
                         generateStats()
 
                     }
@@ -135,16 +136,16 @@ constructor(Named("adminUser") protected var adminUser: String, Named("uploadDir
             }
         })
 
-        createFolderButton!!.setDescription("Create Folder")
-        createFolderButton!!.addClickListener(object : Button.ClickListener {
+        createFolderButton.setDescription("Create Folder")
+        createFolderButton.addClickListener(object : Button.ClickListener {
 
             override fun buttonClick(event: ClickEvent) {
-                val uv = CreateFolderWindow(databaseService, uploadDir, currentFolder)
+                val uv = CreateFolderWindow(databaseService, currentFolder)
                 UI.getCurrent().addWindow(uv)
                 uv.addCloseListener(object : Window.CloseListener {
 
                     override fun windowClose(e: CloseEvent) {
-                        filesTable!!.loadFiles()
+                        filesTable.loadFiles()
                         generateStats()
 
                     }
@@ -153,21 +154,21 @@ constructor(Named("adminUser") protected var adminUser: String, Named("uploadDir
             }
         })
 
-        goToParentButton!!.setDescription("Go to Parent folder")
-        goToParentButton!!.addClickListener(object : Button.ClickListener {
+        goToParentButton.setDescription("Go to Parent folder")
+        goToParentButton.addClickListener(object : Button.ClickListener {
 
             override fun buttonClick(event: ClickEvent) {
                 goToParentFolder()
-                filesTable!!.loadFiles()
+                filesTable.loadFiles()
             }
         })
 
-        reloadButton!!.setIcon(ThemeResource("img/reload.png"))
-        reloadButton!!.setDescription("Reload Files")
-        reloadButton!!.addClickListener(object : Button.ClickListener {
+        reloadButton.setIcon(ThemeResource("img/reload.png"))
+        reloadButton.setDescription("Reload Files")
+        reloadButton.addClickListener(object : Button.ClickListener {
 
             override fun buttonClick(event: ClickEvent) {
-                filesTable!!.loadFiles()
+                filesTable.loadFiles()
                 generateStats()
                 Notification.show("Files reloaded", "", Notification.Type.HUMANIZED_MESSAGE)
             }
@@ -181,14 +182,14 @@ constructor(Named("adminUser") protected var adminUser: String, Named("uploadDir
         }
         val sr = StreamResource(source, currentFolder.fileName + "_all_files.zip")
         val fileDownloader = FileDownloader(sr)
-        downloadAllButton!!.setIcon(ThemeResource("img/zip.png"))
-        downloadAllButton!!.setDescription("Download all as zip")
+        downloadAllButton.setIcon(ThemeResource("img/zip.png"))
+        downloadAllButton.setDescription("Download all as zip")
         fileDownloader.extend(downloadAllButton)
 
-        deleteAllButton!!.setVisible(true)
-        deleteAllButton!!.setIcon(ThemeResource("img/delete.png"))
-        deleteAllButton!!.setDescription("Delete all files")
-        deleteAllButton!!.addClickListener(object : Button.ClickListener {
+        deleteAllButton.setVisible(true)
+        deleteAllButton.setIcon(ThemeResource("img/delete.png"))
+        deleteAllButton.setDescription("Delete all files")
+        deleteAllButton.addClickListener(object : Button.ClickListener {
 
             override fun buttonClick(event: ClickEvent) {
 
@@ -199,7 +200,7 @@ constructor(Named("adminUser") protected var adminUser: String, Named("uploadDir
                 confirmation.addCloseListener(object : Window.CloseListener {
 
                     override fun windowClose(e: CloseEvent) {
-                        filesTable!!.loadFiles()
+                        filesTable.loadFiles()
                         generateStats()
                     }
                 })
@@ -210,7 +211,7 @@ constructor(Named("adminUser") protected var adminUser: String, Named("uploadDir
     }
 
     public fun generateStats() {
-        sizeStats!!.setValue("CURRENT FOLDER: " + currentFolder.fileName + " " + username + " in " + uploadDir + " (" + documentService.getSizeOfFiles() + " / " + documentService.getFreeSpace() + " MB)")
+        sizeStats.setValue("CURRENT FOLDER: " + currentFolder.fileName + " " + username + " in " + uploadDir + " (" + documentService.getSizeOfFiles() + " / " + documentService.getFreeSpace() + " MB)")
     }
 
     companion object {

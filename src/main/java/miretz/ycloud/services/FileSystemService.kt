@@ -32,26 +32,33 @@ import miretz.ycloud.services.utils.CustomFileNameResource
 Singleton
 public class FileSystemService
 @Inject
-constructor(Named("thumbnailDir") thumbnailDir: String, Named("uploadDir") uploadDir: String, Named("dateFormat") protected val dateFormat: String) : DocumentService {
-    protected val thumbnailDimensions: Dimension
+constructor(Named("thumbnailDir") thumbnailDir: String, Named("uploadDir") uploadDir: String, Named("dateFormat") protected val dateFormat: String, protected val databaseService: DatabaseService) : DocumentService {
 
+    protected val thumbnailDimensions: Dimension
     protected val thumbnailDir: File
     protected val uploadDir: File
+
 
     init {
         this.thumbnailDimensions = Dimension(50, 50)
 
-        val uploadDirFile : File? = File(uploadDir)
-        val thumbnailDirFile : File? = File(thumbnailDir)
+        val uploadDirFile: File? = File(uploadDir)
+        val thumbnailDirFile: File? = File(thumbnailDir)
 
-		this.uploadDir = uploadDirFile ?: throw IllegalStateException("upload directory is not set")
-		this.thumbnailDir =  thumbnailDirFile ?: throw IllegalStateException("thumbnail directory is not set")
+        this.uploadDir = uploadDirFile ?: throw IllegalStateException("upload directory is not set")
+        this.thumbnailDir = thumbnailDirFile ?: throw IllegalStateException("thumbnail directory is not set")
 
     }
 
     override fun deleteFile(document: Document): Boolean {
 
         val contentId = document.contentId
+
+        //delete descendants
+        databaseService.getDescendants(contentId).forEach {
+            f ->
+            deleteFile(f)
+        }
 
         // delete thumbnail
         val thumbnail = getFileFromDir(thumbnailDir, contentId)
@@ -127,8 +134,8 @@ constructor(Named("thumbnailDir") thumbnailDir: String, Named("uploadDir") uploa
             var xPos = 0
             var yPos = 0
 
-            var scaled: Image? = null
-            var img: BufferedImage? = null
+            var scaled: Image?
+            var img: BufferedImage?
 
             if (sourceImage.getWidth() > sourceImage.getHeight()) {
                 scaled = sourceImage.getScaledInstance(-1, thumbnailDimensions.height, Image.SCALE_SMOOTH)
@@ -156,7 +163,10 @@ constructor(Named("thumbnailDir") thumbnailDir: String, Named("uploadDir") uploa
 
             val files = ArrayList<File>()
             for (doc in documents) {
-                files.add(getFileFromDir(uploadDir, doc.contentId))
+                val file = getFileFromDir(uploadDir, doc.contentId)
+                if (file != null) {
+                    files.add(file)
+                }
             }
 
             val out = ZipOutputStream(FileOutputStream(f))
@@ -169,8 +179,8 @@ constructor(Named("thumbnailDir") thumbnailDir: String, Named("uploadDir") uploa
                     val bufferedInputStream = BufferedInputStream(fileInputStream, BUFFER)
                     var size = 0
                     while (size != -1) {
-						size = bufferedInputStream.read(data, 0, BUFFER)
-						out.write(data, 0, size)
+                        size = bufferedInputStream.read(data, 0, BUFFER)
+                        out.write(data, 0, size)
                     }
                     bufferedInputStream.close()
                     out.closeEntry()

@@ -13,10 +13,6 @@ import com.vaadin.ui.Window
 
 public class CreateUserWindow(databaseService: DatabaseService) : Window("Create User") {
 
-    private val fldUsername: TextField
-    private val fldPassword: PasswordField
-    private val btnCreateUser: Button
-
     init {
 
         center()
@@ -33,7 +29,7 @@ public class CreateUserWindow(databaseService: DatabaseService) : Window("Create
         setModal(true)
 
         // Create the user input field
-        fldUsername = TextField("User:")
+        val fldUsername: TextField = TextField("User:")
         fldUsername.setWidth("300px")
         fldUsername.setRequired(true)
         fldUsername.setInputPrompt("Your username (eg. joe@email.com)")
@@ -42,7 +38,7 @@ public class CreateUserWindow(databaseService: DatabaseService) : Window("Create
         content.addComponent(fldUsername)
 
         // Create the password input field
-        fldPassword = PasswordField("Password:")
+        val fldPassword: PasswordField = PasswordField("Password:")
         fldPassword.setWidth("300px")
         fldPassword.addValidator(PasswordValidator())
         fldPassword.setRequired(true)
@@ -50,7 +46,7 @@ public class CreateUserWindow(databaseService: DatabaseService) : Window("Create
         fldPassword.setNullRepresentation("")
         content.addComponent(fldPassword)
 
-        btnCreateUser = Button("Create User")
+        val btnCreateUser: Button = Button("Create User")
         btnCreateUser.addClickListener(object : Button.ClickListener {
 
             override fun buttonClick(event: ClickEvent) {

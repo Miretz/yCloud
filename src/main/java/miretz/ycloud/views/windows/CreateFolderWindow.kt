@@ -14,20 +14,22 @@ import com.vaadin.ui.TextField
 import com.vaadin.ui.VerticalLayout
 import com.vaadin.ui.Window
 
-public class CreateFolderWindow(databaseService: DatabaseService, uploadDir: String, currentFolder: Document) : Window("Create Folder") {
-
-    private val fileNameLabel = Label("Folder Name:")
-    private val fileNameField = TextField()
-
-    private val commentLabel = Label("Folder Comment:")
-    private val commentField = TextField()
+public class CreateFolderWindow(databaseService: DatabaseService, currentFolder: Document) : Window("Create Folder") {
 
     init {
+
+        val fileNameLabel = Label("Folder Name:")
+        val fileNameField = TextField()
+        val commentLabel = Label("Folder Comment:")
+        val commentField = TextField()
+
         center()
 
         // Some basic content for the window
         val content = VerticalLayout()
         content.setMargin(true)
+        content.setSpacing(true)
+
         setContent(content)
         content.setWidth("310px")
 

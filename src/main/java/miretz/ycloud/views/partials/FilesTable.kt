@@ -29,9 +29,9 @@ import kotlin.platform.platformName
 public class FilesTable(private val mainView: MainView, protected var documentService: DocumentService, protected var databaseService: DatabaseService) : Panel() {
 
 	private val lw: LightboxWindow
-    private var lightboxWindowClosed = true
-
     private val table: Table
+
+    private var lightboxWindowClosed = true
 
     init {
 
@@ -100,29 +100,7 @@ public class FilesTable(private val mainView: MainView, protected var documentSe
 
         val mimeType = documentService.getFileMimeType(document)
 
-        var thumbnail: Image? = null
-        val thumbnailResource = documentService.getThumbnailFileResource(document)
-        if (thumbnailResource != null) {
-            thumbnail = Image(null, thumbnailResource)
-            thumbnail.addStyleName("cursor-pointer")
-            thumbnail.addClickListener(object : MouseEvents.ClickListener {
-
-                override fun click(event: com.vaadin.event.MouseEvents.ClickEvent) {
-                    if (lightboxWindowClosed) {
-                        lightboxWindowClosed = false
-                        lw.setImage(document)
-                        UI.getCurrent().addWindow(lw)
-                    } else {
-                        lw.setImage(document)
-                        lw.setImmediate(true)
-                    }
-                }
-            })
-        } else {
-            val icon = FileIconUtil.detectIcon(mimeType)
-            val resource = ThemeResource(icon)
-            thumbnail = Image(null, resource)
-        }
+        var thumbnail: Image = getThumbnail(document, mimeType)
 
         val modified = documentService.getModifiedDate(document)
 
@@ -166,7 +144,34 @@ public class FilesTable(private val mainView: MainView, protected var documentSe
         val vl = VerticalLayout(download, commentLabel)
         vl.setComponentAlignment(commentLabel, Alignment.TOP_LEFT)
 
-        table.addItem(arrayOf<Any>(thumbnail, vl, creator, modified, size.toString(), mimeType, delete), counter)
+        table.addItem(arrayOf(thumbnail, vl, creator, modified, size.toString(), mimeType, delete), counter)
+    }
+
+    private fun getThumbnail(document: Document, mimeType: String): Image {
+
+        val thumbnailResource = documentService.getThumbnailFileResource(document)
+        if (thumbnailResource != null) {
+            val thumbnail = Image(null, thumbnailResource)
+            thumbnail.addStyleName("cursor-pointer")
+            thumbnail.addClickListener(object : MouseEvents.ClickListener {
+
+                override fun click(event: MouseEvents.ClickEvent) {
+                    if (lightboxWindowClosed) {
+                        lightboxWindowClosed = false
+                        lw.setImage(document)
+                        UI.getCurrent().addWindow(lw)
+                    } else {
+                        lw.setImage(document)
+                        lw.setImmediate(true)
+                    }
+                }
+            })
+            return thumbnail
+        } else {
+            val icon = FileIconUtil.detectIcon(mimeType)
+            val resource = ThemeResource(icon)
+            return Image(null, resource)
+        }
     }
 
     private fun addFolderToTable(counter: Int, document: Document) {
@@ -198,7 +203,7 @@ public class FilesTable(private val mainView: MainView, protected var documentSe
         val vl = VerticalLayout(download, commentLabel)
         vl.setComponentAlignment(commentLabel, Alignment.TOP_LEFT)
 
-        table.addItem(arrayOf<Any>(thumbnail, vl, creator, "", "0.0", "folder", delete), counter)
+        table.addItem(arrayOf(thumbnail, vl, creator, "", "0.0", "folder", delete), counter)
     }
 
     private fun getDeleteButton(document: Document): Button {

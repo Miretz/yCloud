@@ -17,7 +17,7 @@ public interface DatabaseService {
 
     /** file interaction  */
 
-    public fun addDocument(document: Document)
+    public fun addDocument(documentToStore: Document)
 
     public fun getAllDocuments(): List<Document>
 

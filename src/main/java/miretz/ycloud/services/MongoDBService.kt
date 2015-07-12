@@ -168,6 +168,7 @@ constructor(
         return myDoc.map { it -> getDocument(it) }
     }
 
+
     override fun findDocument(contentId: String): miretz.ycloud.models.Document {
         val table = database.getCollection(filesDbTableName)
         val document = table.find(eq("contentId", contentId)).first() ?: throw IllegalStateException("Document not found")
