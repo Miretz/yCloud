@@ -18,7 +18,10 @@ Prerequisites
 - Apache Maven - to compile and run
 - Intellij Idea Community Edition
 
-Modify config.properties
+Modify "config.properties" file which is located in:
+```
+yCloud/src/main/resources
+```
 - Set username and password
 - Set upload directory (absolute path)
 
