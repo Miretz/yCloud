@@ -1,20 +1,11 @@
 package miretz.ycloud.views.windows
 
-import java.util.HashMap
-import java.util.UUID
-
+import com.vaadin.ui.*
 import miretz.ycloud.models.Document
 import miretz.ycloud.services.DatabaseService
-import miretz.ycloud.services.DocumentService
+import java.util.*
 
-import com.vaadin.ui.Button
-import com.vaadin.ui.Button.ClickEvent
-import com.vaadin.ui.Label
-import com.vaadin.ui.TextField
-import com.vaadin.ui.VerticalLayout
-import com.vaadin.ui.Window
-
-public class CreateFolderWindow(databaseService: DatabaseService, currentFolder: Document) : Window("Create Folder") {
+class CreateFolderWindow(databaseService: DatabaseService, currentFolder: Document) : Window("Create Folder") {
 
     init {
 
@@ -28,49 +19,44 @@ public class CreateFolderWindow(databaseService: DatabaseService, currentFolder:
         // Some basic content for the window
         val content = VerticalLayout()
         content.setMargin(true)
-        content.setSpacing(true)
+        content.isSpacing = true
 
         setContent(content)
         content.setWidth("310px")
 
         // Disable the close button
-        setClosable(true)
-        setResizable(false)
-        setModal(true)
+        isClosable = true
+        isResizable = false
+        isModal = true
 
-        fileNameLabel.setVisible(true)
-        fileNameField.setVisible(true)
+        fileNameLabel.isVisible = true
+        fileNameField.isVisible = true
         fileNameField.setWidth("250px")
 
         content.addComponent(fileNameLabel)
         content.addComponent(fileNameField)
 
-        commentLabel.setVisible(true)
-        commentField.setVisible(true)
+        commentLabel.isVisible = true
+        commentField.isVisible = true
         commentField.setWidth("250px")
 
         content.addComponent(commentLabel)
         content.addComponent(commentField)
 
         val btnCreateUser = Button("Create Folder")
-        btnCreateUser.addClickListener(object : Button.ClickListener {
+        btnCreateUser.addClickListener {
+            val creator = (session.getAttribute("user")) as String
 
-            override fun buttonClick(event: ClickEvent) {
+            val metadata = HashMap<String, String>()
+            metadata.put("creator", creator)
+            metadata.put("comment", commentField.value)
 
-                val creator = (getSession().getAttribute("user")) as String
+            val document = Document(UUID.randomUUID().toString(), fileNameField.value, currentFolder.contentId, metadata, Document.TYPE_FOLDER)
 
-                val metadata = HashMap<String, String>()
-                metadata.put("creator", creator)
-                metadata.put("comment", commentField.getValue())
+            databaseService.addDocument(document)
 
-                val document = Document(UUID.randomUUID().toString(), fileNameField.getValue(), currentFolder.contentId, metadata, Document.TYPE_FOLDER)
-
-                databaseService.addDocument(document)
-
-                close()
-
-            }
-        })
+            close()
+        }
 
         content.addComponent(btnCreateUser)
 

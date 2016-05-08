@@ -29,10 +29,10 @@ import com.google.inject.name.Named
 import com.vaadin.server.FileResource
 import miretz.ycloud.services.utils.CustomFileNameResource
 
-Singleton
-public class FileSystemService
+@Singleton
+class FileSystemService
 @Inject
-constructor(Named("thumbnailDir") thumbnailDir: String, Named("uploadDir") uploadDir: String, Named("dateFormat") protected val dateFormat: String, protected val databaseService: DatabaseService) : DocumentService {
+constructor(@Named("thumbnailDir") thumbnailDir: String, @Named("uploadDir") uploadDir: String, @Named("dateFormat") protected val dateFormat: String, protected val databaseService: DatabaseService) : DocumentService {
 
     protected val thumbnailDimensions: Dimension
     protected val thumbnailDir: File
@@ -76,7 +76,7 @@ constructor(Named("thumbnailDir") thumbnailDir: String, Named("uploadDir") uploa
 
     override fun deleteAllFiles() {
 
-        if (logger.isDebugEnabled()) {
+        if (logger.isDebugEnabled) {
             logger.debug("Delete all files started!")
         }
 
@@ -106,7 +106,7 @@ constructor(Named("thumbnailDir") thumbnailDir: String, Named("uploadDir") uploa
     }
 
     override fun getFreeSpace(): Double {
-        val freeSpace = uploadDir.getFreeSpace()
+        val freeSpace = uploadDir.freeSpace
         return getSizeInMbDouble(freeSpace)
     }
 
@@ -137,27 +137,27 @@ constructor(Named("thumbnailDir") thumbnailDir: String, Named("uploadDir") uploa
             var scaled: Image?
             var img: BufferedImage?
 
-            if (sourceImage.getWidth() > sourceImage.getHeight()) {
+            if (sourceImage.width > sourceImage.height) {
                 scaled = sourceImage.getScaledInstance(-1, thumbnailDimensions.height, Image.SCALE_SMOOTH)
                 img = BufferedImage(scaled!!.getWidth(null), thumbnailDimensions.height, BufferedImage.TYPE_INT_RGB)
-                xPos = ((img.getWidth() / 2) - (thumbnailDimensions.getWidth() / 2)).toInt()
+                xPos = ((img.width / 2) - (thumbnailDimensions.getWidth() / 2)).toInt()
             } else {
                 scaled = sourceImage.getScaledInstance(thumbnailDimensions.width, -1, Image.SCALE_SMOOTH)
                 img = BufferedImage(thumbnailDimensions.width, scaled!!.getHeight(null), BufferedImage.TYPE_INT_RGB)
-                yPos = ((img.getHeight() / 2) - (thumbnailDimensions.getHeight() / 2)).toInt()
+                yPos = ((img.height / 2) - (thumbnailDimensions.getHeight() / 2)).toInt()
             }
 
             img.createGraphics().drawImage(scaled, 0, 0, null)
             val cropped = img.getSubimage(xPos, yPos, thumbnailDimensions.width, thumbnailDimensions.height)
-            ImageIO.write(cropped, imgExtension, File(thumbnailDir.getAbsolutePath() + File.separator + document.contentId))
+            ImageIO.write(cropped, imgExtension, File(thumbnailDir.absolutePath + File.separator + document.contentId))
         }
 
     }
 
-    override public fun getAllFilesZip(documents: List<Document>): InputStream {
+    override fun getAllFilesZip(documents: List<Document>): InputStream {
         try {
-            val f = File(uploadDir.getAbsolutePath() + File.separator + "all_files.zip")
-            if (f.exists() && f.isFile()) {
+            val f = File(uploadDir.absolutePath + File.separator + "all_files.zip")
+            if (f.exists() && f.isFile) {
                 f.delete()
             }
 
@@ -171,8 +171,8 @@ constructor(Named("thumbnailDir") thumbnailDir: String, Named("uploadDir") uploa
 
             val out = ZipOutputStream(FileOutputStream(f))
             for (file in files) {
-                if (file.isFile()) {
-                    val e = ZipEntry(file.getName())
+                if (file.isFile) {
+                    val e = ZipEntry(file.name)
                     out.putNextEntry(e)
                     val data = ByteArray(BUFFER)
                     val fileInputStream = FileInputStream(file)
@@ -200,7 +200,7 @@ constructor(Named("thumbnailDir") thumbnailDir: String, Named("uploadDir") uploa
     private fun getFileFromDir(dir: File, contentId: String): File? {
         var file: File? = null
         val files = dir.listFiles(DirectoryFilenameFilter(contentId))
-        if (files.size() == 1) {
+        if (files.size == 1) {
             file = files[0]
         }
         return file
@@ -221,7 +221,7 @@ constructor(Named("thumbnailDir") thumbnailDir: String, Named("uploadDir") uploa
 
     companion object {
 
-        private val logger = Logger.getLogger(javaClass<FileSystemService>().getName())
+        private val logger = Logger.getLogger(FileSystemService::class.java.simpleName)
 
         protected val IMAGE_FORMATS: Array<String> = arrayOf("jpg", "png", "bmp", "gif")
         protected val BUFFER: Int = 2048

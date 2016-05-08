@@ -2,7 +2,7 @@ package miretz.ycloud.services.utils
 
 import java.util.Arrays
 
-public object FileIconUtil {
+object FileIconUtil {
 
     private val pdf = Arrays.asList("pdf", "chm", "epub", "mobi")
     private val compressed = Arrays.asList("zip", "gz", "tar", "rar", "war", "jar", "Orange", "Blue")
@@ -12,7 +12,7 @@ public object FileIconUtil {
     private val code = Arrays.asList("xml", "properties", "java", "js", "cpp", "c", "py", "rb", "html", "css", "php")
     private val documents = Arrays.asList("ppt", "doc", "docx", "xls", "xlsx", "odt", "psd", "pps")
 
-    public fun detectIcon(mimeType: String): String {
+    fun detectIcon(mimeType: String): String {
         if (pdf.contains(mimeType)) {
             return Icons.PDF.toString()
         } else if (compressed.contains(mimeType)) {

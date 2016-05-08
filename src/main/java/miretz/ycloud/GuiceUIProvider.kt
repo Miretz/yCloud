@@ -6,17 +6,16 @@ import com.vaadin.server.UIClassSelectionEvent
 import com.vaadin.server.UICreateEvent
 import com.vaadin.server.UIProvider
 
-SuppressWarnings("serial")
-public class GuiceUIProvider : UIProvider() {
+@SuppressWarnings("serial") class GuiceUIProvider : UIProvider() {
 
-    Inject
+    @Inject
     private val injector: Injector? = null
 
     override fun createInstance(event: UICreateEvent): YCloudUI {
-        return injector!!.getInstance(javaClass<YCloudUI>())
+        return injector!!.getInstance(YCloudUI::class.java)
     }
 
     override fun getUIClass(event: UIClassSelectionEvent): Class<YCloudUI> {
-        return javaClass()
+        return YCloudUI::class.java
     }
 }

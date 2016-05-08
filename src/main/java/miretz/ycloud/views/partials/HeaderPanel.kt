@@ -1,9 +1,6 @@
 package miretz.ycloud.views.partials
 
 import com.vaadin.server.Sizeable
-import miretz.ycloud.views.LoginView
-import miretz.ycloud.views.UsersView
-
 import com.vaadin.server.ThemeResource
 import com.vaadin.ui.Button
 import com.vaadin.ui.Button.ClickEvent
@@ -11,13 +8,15 @@ import com.vaadin.ui.HorizontalLayout
 import com.vaadin.ui.Image
 import com.vaadin.ui.Label
 import com.vaadin.ui.themes.ValoTheme
+import miretz.ycloud.views.LoginView
+import miretz.ycloud.views.UsersView
 
-public class HeaderPanel : HorizontalLayout() {
+class HeaderPanel : HorizontalLayout() {
     private val loginName: Button
     private val users: Button
 
     init {
-        setStyleName("backBlue")
+        styleName = "backBlue"
         setWidth(100f, Sizeable.Unit.PERCENTAGE)
 
         val resource = ThemeResource("img/cloud.png")
@@ -33,46 +32,46 @@ public class HeaderPanel : HorizontalLayout() {
         users = Button("Users", object : Button.ClickListener {
 
             override fun buttonClick(event: ClickEvent) {
-                getUI().getNavigator().navigateTo(UsersView.NAME)
+                ui.navigator.navigateTo(UsersView.NAME)
             }
         })
         users.setWidth(null)
-        users.setEnabled(false)
-        users.setVisible(false)
-        users.setStyleName(ValoTheme.BUTTON_BORDERLESS)
+        users.isEnabled = false
+        users.isVisible = false
+        users.styleName = ValoTheme.BUTTON_BORDERLESS
         addComponent(users)
 
         // logout button
         loginName = Button("Logout", object : Button.ClickListener {
 
             override fun buttonClick(event: ClickEvent) {
-                getSession().setAttribute("user", null)
-                getUI().getNavigator().navigateTo(LoginView.NAME)
+                session.setAttribute("user", null)
+                ui.navigator.navigateTo(LoginView.NAME)
             }
         })
         loginName.setWidth(null)
-        loginName.setEnabled(false)
-        loginName.setVisible(false)
-        loginName.setStyleName(ValoTheme.BUTTON_BORDERLESS)
-        loginName.setIcon(ThemeResource("img/logout.png"))
+        loginName.isEnabled = false
+        loginName.isVisible = false
+        loginName.styleName = ValoTheme.BUTTON_BORDERLESS
+        loginName.icon = ThemeResource("img/logout.png")
         addComponent(loginName)
 
         setExpandRatio(title, 1.0f)
 
-        setImmediate(true)
+        isImmediate = true
     }
 
-    public fun enableLogout() {
-        loginName.setVisible(true)
-        loginName.setEnabled(true)
-        loginName.setImmediate(true)
-        setImmediate(true)
+    fun enableLogout() {
+        loginName.isVisible = true
+        loginName.isEnabled = true
+        loginName.isImmediate = true
+        isImmediate = true
     }
 
-    public fun enableUsers() {
-        users.setVisible(true)
-        users.setEnabled(true)
-        users.setImmediate(true)
-        setImmediate(true)
+    fun enableUsers() {
+        users.isVisible = true
+        users.isEnabled = true
+        users.isImmediate = true
+        isImmediate = true
     }
 }

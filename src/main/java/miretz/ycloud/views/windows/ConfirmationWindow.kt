@@ -1,21 +1,12 @@
 package miretz.ycloud.views.windows
 
 
+import com.vaadin.ui.*
 import miretz.ycloud.models.Document
 import miretz.ycloud.services.DatabaseService
 import miretz.ycloud.services.DocumentService
 
-import com.vaadin.ui.Alignment
-import com.vaadin.ui.Button
-import com.vaadin.ui.Button.ClickEvent
-import com.vaadin.ui.HorizontalLayout
-import com.vaadin.ui.Label
-import com.vaadin.ui.Notification
-import com.vaadin.ui.VerticalLayout
-import com.vaadin.ui.Window
-
-SuppressWarnings("serial")
-public class ConfirmationWindow(documents: List<Document>, documentService: DocumentService, databaseService: DatabaseService) : Window("User confirmation required") {
+@SuppressWarnings("serial") class ConfirmationWindow(documents: List<Document>, documentService: DocumentService, databaseService: DatabaseService) : Window("User confirmation required") {
 
     init {
 
@@ -37,21 +28,15 @@ public class ConfirmationWindow(documents: List<Document>, documentService: Docu
         // buttons
         val buttons = HorizontalLayout()
 
-        val yes = Button("Yes", object : Button.ClickListener {
-            override fun buttonClick(event: ClickEvent) {
-                for (document in documents) {
-                    documentService.deleteFile(document)
-                    databaseService.deleteDocument(document.contentId)
-                }
-                Notification.show("Files Deleted:", filesToDelete, Notification.Type.HUMANIZED_MESSAGE)
-                close()
+        val yes = Button("Yes", Button.ClickListener {
+            for (document in documents) {
+                documentService.deleteFile(document)
+                databaseService.deleteDocument(document.contentId)
             }
+            Notification.show("Files Deleted:", filesToDelete, Notification.Type.HUMANIZED_MESSAGE)
+            close()
         })
-        val no = Button("No", object : Button.ClickListener {
-            override fun buttonClick(event: ClickEvent) {
-                close()
-            }
-        })
+        val no = Button("No", Button.ClickListener { close() })
 
         buttons.addComponent(yes)
         buttons.addComponent(no)

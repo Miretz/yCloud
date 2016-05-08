@@ -17,7 +17,7 @@ import com.vaadin.ui.PasswordField
 import com.vaadin.ui.TextField
 import com.vaadin.ui.VerticalLayout
 
-public class LoginView
+class LoginView
 @Inject
 constructor(protected var databaseService: DatabaseService) : CustomComponent(), View, Button.ClickListener {
 
@@ -31,27 +31,27 @@ constructor(protected var databaseService: DatabaseService) : CustomComponent(),
         this.loginButton = Button("Login", this)
     }
 
-    public fun initialize() {
+    fun initialize() {
         setSizeFull()
 
         // Create the user input field
         user.setWidth("300px")
-        user.setRequired(true)
-        user.setInputPrompt("Your username (eg. joe@email.com)")
+        user.isRequired = true
+        user.inputPrompt = "Your username (eg. joe@email.com)"
         user.addValidator(EmailValidator("Username must be an email address"))
-        user.setInvalidAllowed(false)
+        user.isInvalidAllowed = false
 
         // Create the password input field
         password.setWidth("300px")
         password.addValidator(PasswordValidator())
-        password.setRequired(true)
-        password.setValue("")
-        password.setNullRepresentation("")
+        password.isRequired = true
+        password.value = ""
+        password.nullRepresentation = ""
 
         // Add both to a panel
         val fields = VerticalLayout(user, password, loginButton)
-        fields.setSpacing(true)
-        fields.setMargin(MarginInfo(true, true, true, false))
+        fields.isSpacing = true
+        fields.margin = MarginInfo(true, true, true, false)
         fields.setSizeUndefined()
 
         // The view root layout
@@ -60,7 +60,7 @@ constructor(protected var databaseService: DatabaseService) : CustomComponent(),
         viewLayout.setComponentAlignment(fields, Alignment.MIDDLE_CENTER)
 
         val mainLayout = VerticalLayout(HeaderPanel(), viewLayout)
-        setCompositionRoot(mainLayout)
+        compositionRoot = mainLayout
     }
 
     override fun enter(event: ViewChangeEvent) {
@@ -70,24 +70,24 @@ constructor(protected var databaseService: DatabaseService) : CustomComponent(),
 
     override fun buttonClick(event: ClickEvent) {
 
-        if (!user.isValid() || !password.isValid()) {
+        if (!user.isValid || !password.isValid) {
             return
         }
 
-        val username = user.getValue()
+        val username = user.value
 
-        val isValid = databaseService.checkUserPassword(username, password.getValue())
+        val isValid = databaseService.checkUserPassword(username, password.value)
 
         if (isValid) {
-            getSession().setAttribute("user", username)
-            getUI().getNavigator().navigateTo(MainView.NAME)
+            session.setAttribute("user", username)
+            ui.navigator.navigateTo(MainView.NAME)
         } else {
-            this.password.setValue(null)
+            this.password.value = null
             this.password.focus()
         }
     }
 
     companion object {
-        public val NAME: String = "login"
+        val NAME: String = "login"
     }
 }

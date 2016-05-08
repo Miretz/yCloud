@@ -1,49 +1,39 @@
 package miretz.ycloud.services
 
-import com.mongodb.client.model.Filters.eq
-
-import java.util.ArrayList
-import java.util.Arrays
-import java.util.Date
-import java.util.HashMap
-
-import javax.inject.Singleton
-
-import miretz.ycloud.services.utils.PasswordHashUtil
-
-import org.bson.Document
-
 import com.github.fakemongo.Fongo
 import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.mongodb.MongoClient
 import com.mongodb.MongoCredential
 import com.mongodb.ServerAddress
-import com.mongodb.client.FindIterable
-import com.mongodb.client.MongoCollection
 import com.mongodb.client.MongoDatabase
+import com.mongodb.client.model.Filters.eq
+import miretz.ycloud.services.utils.PasswordHashUtil
+import org.bson.Document
+import java.util.*
+import javax.inject.Singleton
 
-Singleton
-public class MongoDBService
+@Singleton
+class MongoDBService
 @Inject
 constructor(
-        Named(MongoDBService.PROPERTY_USE_FAKE_MONGO) useFakeMongo: String,
-        Named(MongoDBService.PROPERTY_DB_NAME) dbName: String,
-        Named(MongoDBService.PROPERTY_DB_HOST) dbHost: String,
-        Named(MongoDBService.PROPERTY_DB_PASS) dbPass: String,
-        Named(MongoDBService.PROPERTY_DB_USER) dbUser: String,
+        @Named(MongoDBService.PROPERTY_USE_FAKE_MONGO) useFakeMongo: String,
+        @Named(MongoDBService.PROPERTY_DB_NAME) dbName: String,
+        @Named(MongoDBService.PROPERTY_DB_HOST) dbHost: String,
+        @Named(MongoDBService.PROPERTY_DB_PASS) dbPass: String,
+        @Named(MongoDBService.PROPERTY_DB_USER) dbUser: String,
 
-        Named("adminUser") protected var adminUser: String,
-        Named("adminPass") protected var adminPass: String,
-        Named("usersDbTableName") protected var usersDbTableName: String,
-        Named("filesDbTableName") protected var filesDbTableName: String) : DatabaseService {
+        @Named("adminUser") protected var adminUser: String,
+        @Named("adminPass") protected var adminPass: String,
+        @Named("usersDbTableName") protected var usersDbTableName: String,
+        @Named("filesDbTableName") protected var filesDbTableName: String) : DatabaseService {
 
     companion object {
-        public val PROPERTY_DB_HOST: String = "dbHost"
-        public val PROPERTY_DB_PASS: String = "dbPass"
-        public val PROPERTY_DB_USER: String = "dbUser"
-        public val PROPERTY_USE_FAKE_MONGO: String = "useFakeMongo"
-        public val PROPERTY_DB_NAME: String = "dbName"
+        const val PROPERTY_DB_HOST: String = "dbHost"
+        const val PROPERTY_DB_PASS: String = "dbPass"
+        const val PROPERTY_DB_USER: String = "dbUser"
+        const val PROPERTY_USE_FAKE_MONGO: String = "useFakeMongo"
+        const val PROPERTY_DB_NAME: String = "dbName"
     }
 
     protected var database: MongoDatabase
@@ -69,11 +59,11 @@ constructor(
         rootFolderSetup()
     }
 
-    public fun rootFolderSetup() {
+    fun rootFolderSetup() {
         addDocument(miretz.ycloud.models.Document("root", "root", "", HashMap<String, String>(), miretz.ycloud.models.Document.TYPE_FOLDER))
     }
 
-    public fun adminUserSetup() {
+    fun adminUserSetup() {
 
         // drop all users
         // database.getCollection(USERS_TABLE).drop();
@@ -117,7 +107,7 @@ constructor(
 
     override fun listUsernames(): List<String> {
         val table = database.getCollection(usersDbTableName)
-        return table.find().map { it.getString("username") }
+        return table.find().map { it.getString("username") }.toList()
     }
 
     /**
@@ -146,8 +136,8 @@ constructor(
         document.append("type", documentToStore.type)
 
         val metadata = Document()
-        for (entry in documentToStore.metadata.entrySet()) {
-            metadata.append(entry.getKey(), entry.getValue())
+        for (entry in documentToStore.metadata.entries) {
+            metadata.append(entry.key, entry.value)
         }
         document.append("metadata", metadata)
         document.append("createdDate", Date())
@@ -158,14 +148,14 @@ constructor(
 
     override fun getAllDocuments(): List<miretz.ycloud.models.Document> {
         val table = database.getCollection(filesDbTableName)
-        val result : List<miretz.ycloud.models.Document> = table.find().map { it -> getDocument(it) }
+        val result : List<miretz.ycloud.models.Document> = table.find().map { it -> getDocument(it) }.toList()
         return result
     }
 
     override fun getDescendants(parentId: String): List<miretz.ycloud.models.Document> {
         val table = database.getCollection(filesDbTableName)
-        val myDoc = table.find(eq<String>("parentId", parentId)) ?: return ArrayList<miretz.ycloud.models.Document>()
-        return myDoc.map { it -> getDocument(it) }
+        val myDoc = table.find(eq<String>("parentId", parentId)) ?: return ArrayList()
+        return myDoc.map { it -> getDocument(it) }.toList()
     }
 
 
@@ -177,8 +167,8 @@ constructor(
 
     private fun getMetadataAsMap(document: Document): Map<String, String> {
         val metadataMap = HashMap<String, String>()
-        for (entry in document.get("metadata", javaClass<Document>()).entrySet()) {
-            metadataMap.put(entry.getKey(), entry.getValue() as String)
+        for (entry in document.get("metadata", Document().javaClass).entries) {
+            metadataMap.put(entry.key, entry.value as String)
         }
         return metadataMap
     }

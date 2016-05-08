@@ -17,14 +17,13 @@ import com.google.inject.name.Names
 import com.google.inject.servlet.GuiceServletContextListener
 import com.google.inject.servlet.ServletModule
 
-WebListener
-public class Bootstrap : GuiceServletContextListener() {
+@WebListener class Bootstrap : GuiceServletContextListener() {
     override fun getInjector(): Injector {
         return Guice.createInjector(object : ServletModule() {
             override fun configureServlets() {
-                serve("/*").with(javaClass<GuiceApplicationServlet>())
+                serve("/*").with(GuiceApplicationServlet::class.java)
 
-                val classLoader = Thread.currentThread().getContextClassLoader()
+                val classLoader = Thread.currentThread().contextClassLoader
                 val stream = classLoader.getResourceAsStream("config.properties")
                 val properties = Properties()
 
@@ -35,13 +34,13 @@ public class Bootstrap : GuiceServletContextListener() {
                         Names.bindProperties(binder(), properties)
 
                     } catch (e: IOException) {
-                        throw RuntimeException(e.getMessage(), e)
+                        throw RuntimeException(e.message, e)
                     }
 
                 }
 
-                bind<DatabaseService>(javaClass<DatabaseService>()).to(javaClass<MongoDBService>())
-                bind<DocumentService>(javaClass<DocumentService>()).to(javaClass<FileSystemService>())
+                bind<DatabaseService>(DatabaseService::class.java).to(MongoDBService::class.java)
+                bind<DocumentService>(DocumentService::class.java).to(FileSystemService::class.java)
 
             }
         })

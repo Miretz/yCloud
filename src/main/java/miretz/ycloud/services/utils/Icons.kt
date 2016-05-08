@@ -1,6 +1,6 @@
 package miretz.ycloud.services.utils
 
-public enum class Icons private constructor(private val text: String) {
+enum class Icons private constructor(private val text: String) {
 
     AUDIO("img/icons/audio.png"),
     CODE("img/icons/code.png"),

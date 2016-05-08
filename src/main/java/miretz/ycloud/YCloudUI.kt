@@ -14,32 +14,31 @@ import com.vaadin.server.VaadinRequest
 import com.vaadin.ui.Notification
 import com.vaadin.ui.UI
 
-SuppressWarnings("serial")
-Theme("ycloud")
-public class YCloudUI : UI() {
+@SuppressWarnings("serial")
+@Theme("ycloud") class YCloudUI : UI() {
 
-    Inject
+    @Inject
     private val injector: Injector? = null
 
     override fun init(vaadinRequest: VaadinRequest) {
         Navigator(this, this)
 
-        getNavigator().addView(LoginView.NAME, injector!!.getInstance(javaClass<LoginView>()))
-        getNavigator().addView(MainView.NAME, injector.getInstance(javaClass<MainView>()))
-        getNavigator().addView(UsersView.NAME, injector.getInstance(javaClass<UsersView>()))
-        getNavigator().addViewChangeListener(YCloudViewChangeListener(this))
+        navigator.addView(LoginView.NAME, injector!!.getInstance(LoginView::class.java))
+        navigator.addView(MainView.NAME, injector.getInstance(MainView::class.java))
+        navigator.addView(UsersView.NAME, injector.getInstance(UsersView::class.java))
+        navigator.addViewChangeListener(YCloudViewChangeListener(this))
 
-        UI.getCurrent().setErrorHandler(object : DefaultErrorHandler() {
+        UI.getCurrent().errorHandler = object : DefaultErrorHandler() {
             override fun error(event: com.vaadin.server.ErrorEvent) {
                 // Find the final cause
                 var cause = "Application Error: "
 
-                var t: Throwable? = event.getThrowable()
+                var t: Throwable? = event.throwable
                 while (t != null) {
-                    if (t.getCause() == null)
+                    if (t.cause == null)
                     // We're at final cause
-                        cause += t.javaClass.getName()
-                    t = t.getCause()
+                        cause += t.javaClass.name
+                    t = t.cause
                 }
 
                 Notification.show("Error", cause, Notification.Type.ERROR_MESSAGE)
@@ -47,7 +46,7 @@ public class YCloudUI : UI() {
                 // Do the default error handling (optional)
                 DefaultErrorHandler.doDefault(event)
             }
-        })
+        }
 
     }
 }

@@ -1,37 +1,34 @@
 package miretz.ycloud.services
 
+import com.vaadin.server.FileResource
+import miretz.ycloud.models.Document
 import java.io.File
-import java.io.IOException
 import java.io.InputStream
 
-import miretz.ycloud.models.Document
+interface DocumentService {
 
-import com.vaadin.server.FileResource
+    fun deleteFile(document: Document): Boolean
 
-public interface DocumentService {
+    fun deleteAllFiles()
 
-    public fun deleteFile(document: Document): Boolean
+    fun getModifiedDate(document: Document): String
 
-    public fun deleteAllFiles()
+    fun getFileResource(document: Document): FileResource
 
-    public fun getModifiedDate(document: Document): String
+    fun getThumbnailFileResource(document: Document): FileResource?
 
-    public fun getFileResource(document: Document): FileResource
+    fun getFreeSpace(): Double
 
-    public fun getThumbnailFileResource(document: Document): FileResource?
+    fun getSizeOfFiles(): Double
 
-    public fun getFreeSpace(): Double
+    fun getSizeInMbDouble(size: Long): Double
 
-    public fun getSizeOfFiles(): Double
+    fun saveThumbnail(document: Document)
 
-    public fun getSizeInMbDouble(size: Long): Double
+    fun getAllFilesZip(documents: List<Document>): InputStream
 
-    public fun saveThumbnail(document: Document)
+    fun getFile(document: Document): File
 
-    public fun getAllFilesZip(documents: List<Document>): InputStream
-
-    public fun getFile(document: Document): File
-
-    public fun getFileMimeType(document: Document): String
+    fun getFileMimeType(document: Document): String
 
 }

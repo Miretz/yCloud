@@ -31,12 +31,12 @@ import com.vaadin.ui.Window
 import com.vaadin.ui.Window.CloseEvent
 import com.vaadin.ui.themes.ValoTheme
 
-public class MainView
+class MainView
 @Inject
-constructor(Named("adminUser") protected var adminUser: String, Named("uploadDir") protected var uploadDir: String, protected val documentService: DocumentService, protected val databaseService: DatabaseService) : CustomComponent(), View {
+constructor(@Named("adminUser") protected var adminUser: String, @Named("uploadDir") protected var uploadDir: String, protected val documentService: DocumentService, protected val databaseService: DatabaseService) : CustomComponent(), View {
 
     private var username = ""
-    public var currentFolder: Document
+    var currentFolder: Document
 
     private val sizeStats: Label
     private val header: HeaderPanel
@@ -63,28 +63,28 @@ constructor(Named("adminUser") protected var adminUser: String, Named("uploadDir
         this.filesTable = FilesTable(this, documentService, databaseService)
     }
 
-    public fun changeCurrentFolder(document: Document) {
+    fun changeCurrentFolder(document: Document) {
         this.currentFolder = document
         toggleGoToParentButton()
     }
 
     private fun toggleGoToParentButton() {
-        goToParentButton.setVisible(currentFolder.contentId != "root")
+        goToParentButton.isVisible = currentFolder.contentId != "root"
     }
 
-    public fun goToParentFolder() {
+    fun goToParentFolder() {
         if (currentFolder.contentId != "root") {
             this.currentFolder = databaseService.findDocument(currentFolder.parentId)
         }
         toggleGoToParentButton()
     }
 
-    public fun initialize() {
+    fun initialize() {
 
-        goToParentButton.setVisible(false)
+        goToParentButton.isVisible = false
 
         val vl = VerticalLayout()
-        vl.setSpacing(true)
+        vl.isSpacing = true
         vl.setSizeFull()
         vl.addComponent(header)
 
@@ -100,10 +100,10 @@ constructor(Named("adminUser") protected var adminUser: String, Named("uploadDir
         val files = HorizontalLayout(filesTable)
         // files.setMargin(true);
         files.setSizeFull()
-        files.setImmediate(true)
+        files.isImmediate = true
         vl.addComponent(files)
 
-        setCompositionRoot(vl)
+        compositionRoot = vl
     }
 
     override fun enter(event: ViewChangeEvent) {
@@ -111,14 +111,14 @@ constructor(Named("adminUser") protected var adminUser: String, Named("uploadDir
         initialize()
 
         header.enableLogout()
-        username = (getSession().getAttribute("user")) as String
+        username = (session.getAttribute("user")) as String
         if (username == adminUser) {
             header.enableUsers()
         }
 
-        uploadButton.setStyleName(ValoTheme.BUTTON_FRIENDLY)
-        uploadButton.setIcon(ThemeResource("img/upload.png"))
-        uploadButton.setDescription("Upload File")
+        uploadButton.styleName = ValoTheme.BUTTON_FRIENDLY
+        uploadButton.icon = ThemeResource("img/upload.png")
+        uploadButton.description = "Upload File"
         uploadButton.addClickListener(object : Button.ClickListener {
 
             override fun buttonClick(event: ClickEvent) {
@@ -136,7 +136,7 @@ constructor(Named("adminUser") protected var adminUser: String, Named("uploadDir
             }
         })
 
-        createFolderButton.setDescription("Create Folder")
+        createFolderButton.description = "Create Folder"
         createFolderButton.addClickListener(object : Button.ClickListener {
 
             override fun buttonClick(event: ClickEvent) {
@@ -154,7 +154,7 @@ constructor(Named("adminUser") protected var adminUser: String, Named("uploadDir
             }
         })
 
-        goToParentButton.setDescription("Go to Parent folder")
+        goToParentButton.description = "Go to Parent folder"
         goToParentButton.addClickListener(object : Button.ClickListener {
 
             override fun buttonClick(event: ClickEvent) {
@@ -163,8 +163,8 @@ constructor(Named("adminUser") protected var adminUser: String, Named("uploadDir
             }
         })
 
-        reloadButton.setIcon(ThemeResource("img/reload.png"))
-        reloadButton.setDescription("Reload Files")
+        reloadButton.icon = ThemeResource("img/reload.png")
+        reloadButton.description = "Reload Files"
         reloadButton.addClickListener(object : Button.ClickListener {
 
             override fun buttonClick(event: ClickEvent) {
@@ -182,13 +182,13 @@ constructor(Named("adminUser") protected var adminUser: String, Named("uploadDir
         }
         val sr = StreamResource(source, currentFolder.fileName + "_all_files.zip")
         val fileDownloader = FileDownloader(sr)
-        downloadAllButton.setIcon(ThemeResource("img/zip.png"))
-        downloadAllButton.setDescription("Download all as zip")
+        downloadAllButton.icon = ThemeResource("img/zip.png")
+        downloadAllButton.description = "Download all as zip"
         fileDownloader.extend(downloadAllButton)
 
-        deleteAllButton.setVisible(true)
-        deleteAllButton.setIcon(ThemeResource("img/delete.png"))
-        deleteAllButton.setDescription("Delete all files")
+        deleteAllButton.isVisible = true
+        deleteAllButton.icon = ThemeResource("img/delete.png")
+        deleteAllButton.description = "Delete all files"
         deleteAllButton.addClickListener(object : Button.ClickListener {
 
             override fun buttonClick(event: ClickEvent) {
@@ -210,11 +210,11 @@ constructor(Named("adminUser") protected var adminUser: String, Named("uploadDir
         generateStats()
     }
 
-    public fun generateStats() {
-        sizeStats.setValue("CURRENT FOLDER: " + currentFolder.fileName + " " + username + " in " + uploadDir + " (" + documentService.getSizeOfFiles() + " / " + documentService.getFreeSpace() + " MB)")
+    fun generateStats() {
+        sizeStats.value = "CURRENT FOLDER: " + currentFolder.fileName + " " + username + " in " + uploadDir + " (" + documentService.getSizeOfFiles() + " / " + documentService.getFreeSpace() + " MB)"
     }
 
     companion object {
-        public val NAME: String = ""
+        val NAME: String = ""
     }
 }

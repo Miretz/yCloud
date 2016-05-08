@@ -1,8 +1,12 @@
 package miretz.ycloud.views.partials
 
-import java.io.File
-import java.util.Arrays
-
+import com.google.gwt.safehtml.shared.SafeHtmlUtils
+import com.vaadin.server.FileDownloader
+import com.vaadin.server.ThemeResource
+import com.vaadin.shared.ui.label.ContentMode
+import com.vaadin.ui.*
+import com.vaadin.ui.Window.CloseEvent
+import com.vaadin.ui.themes.ValoTheme
 import miretz.ycloud.models.Document
 import miretz.ycloud.services.DatabaseService
 import miretz.ycloud.services.DocumentService
@@ -11,22 +15,9 @@ import miretz.ycloud.services.utils.Icons
 import miretz.ycloud.views.MainView
 import miretz.ycloud.views.windows.ConfirmationWindow
 import miretz.ycloud.views.windows.LightboxWindow
+import java.util.*
 
-import com.google.gwt.safehtml.shared.SafeHtmlUtils
-import com.vaadin.event.MouseEvents
-import com.vaadin.server.FileDownloader
-import com.vaadin.server.FileResource
-import com.vaadin.server.ThemeResource
-import com.vaadin.shared.ui.label.ContentMode
-import com.vaadin.ui.*
-import com.vaadin.ui.Button.ClickEvent
-import com.vaadin.ui.Window.CloseEvent
-import com.vaadin.ui.themes.ValoTheme
-import org.atmosphere.interceptor.AtmosphereResourceStateRecovery
-import java.lang
-import kotlin.platform.platformName
-
-public class FilesTable(private val mainView: MainView, protected var documentService: DocumentService, protected var databaseService: DatabaseService) : Panel() {
+class FilesTable(private val mainView: MainView, protected var documentService: DocumentService, protected var databaseService: DatabaseService) : Panel() {
 
 	private val lw: LightboxWindow
     private val table: Table
@@ -37,27 +28,27 @@ public class FilesTable(private val mainView: MainView, protected var documentSe
 
         table = Table()
 
-        table.addContainerProperty("Icon", javaClass<Image>(), null)
-        table.addContainerProperty("FileName / Comment", javaClass<VerticalLayout>(), null)
-        table.addContainerProperty("Creator", javaClass<String>(), null)
-        table.addContainerProperty("Modified", javaClass<String>(), null)
-        table.addContainerProperty("Size (MB)",  javaClass<String>(), null)
-        table.addContainerProperty("File Type", javaClass<String>(), null)
-        table.addContainerProperty("Delete", javaClass<Button>(), null)
+        table.addContainerProperty("Icon", Image::class.java, null)
+        table.addContainerProperty("FileName / Comment", VerticalLayout::class.java, null)
+        table.addContainerProperty("Creator", String::class.java, null)
+        table.addContainerProperty("Modified", String::class.java, null)
+        table.addContainerProperty("Size (MB)",  String::class.java, null)
+        table.addContainerProperty("File Type", String::class.java, null)
+        table.addContainerProperty("Delete", Button::class.java, null)
 
         loadFiles()
 
-        table.setSelectable(false)
-        table.setImmediate(true)
+        table.isSelectable = false
+        table.isImmediate = true
         table.addStyleName(ValoTheme.TABLE_NO_VERTICAL_LINES)
         table.addStyleName(ValoTheme.TABLE_NO_STRIPES)
         table.addStyleName(ValoTheme.TABLE_SMALL)
-        table.setColumnCollapsingAllowed(true)
+        table.isColumnCollapsingAllowed = true
         table.setColumnCollapsed("File Type", true)
         // setColumnWidth("", 50);
         table.setSizeFull()
 
-        setContent(table)
+        content = table
         setSizeFull()
 
         lw = LightboxWindow(documentService)
@@ -69,7 +60,7 @@ public class FilesTable(private val mainView: MainView, protected var documentSe
         })
     }
 
-    public fun loadFiles() {
+    fun loadFiles() {
         table.removeAllItems()
         val fileNames = databaseService.getDescendants(mainView.currentFolder.contentId)
         var counter = 1
@@ -89,8 +80,8 @@ public class FilesTable(private val mainView: MainView, protected var documentSe
         table.sort(properties, ordering)
 
         mainView.generateStats()
-        table.setPageLength(table.size())
-        setImmediate(true)
+        table.pageLength = table.size()
+        isImmediate = true
     }
 
     private fun addFileToTable(counter: Int, document: Document) {
@@ -111,35 +102,25 @@ public class FilesTable(private val mainView: MainView, protected var documentSe
 
         download.addStyleName(ValoTheme.BUTTON_LINK)
         download.addStyleName("fileLink")
-        download.setComponentError(null)
+        download.componentError = null
 
-        setErrorHandler(null)
+        errorHandler = null
 
         val delete = Button("Delete")
-        delete.setIcon(ThemeResource("img/delete.png"))
+        delete.icon = ThemeResource("img/delete.png")
         delete.addStyleName(ValoTheme.BUTTON_LINK)
-        delete.addClickListener(object : Button.ClickListener {
+        delete.addClickListener {
+            val confirmation = ConfirmationWindow(Arrays.asList(document), documentService, databaseService)
 
-            override fun buttonClick(event: ClickEvent) {
+            UI.getCurrent().addWindow(confirmation)
 
-                val confirmation = ConfirmationWindow(Arrays.asList(document), documentService, databaseService)
+            confirmation.addCloseListener { loadFiles() }
+        }
 
-                UI.getCurrent().addWindow(confirmation)
-
-                confirmation.addCloseListener(object : Window.CloseListener {
-
-                    override fun windowClose(e: CloseEvent) {
-                        loadFiles()
-                    }
-                })
-
-            }
-        })
-
-        val comment = SafeHtmlUtils.htmlEscape(document.metadata.get("comment"))
+        val comment = SafeHtmlUtils.htmlEscape(document.metadata["comment"])
         val creator = document.metadata.get("creator") as String
 
-        val commentLabel = Label("<span class=\"comment\">" + comment + "</span>", ContentMode.HTML)
+        val commentLabel = Label("<span class=\"comment\">$comment</span>", ContentMode.HTML)
 
         val vl = VerticalLayout(download, commentLabel)
         vl.setComponentAlignment(commentLabel, Alignment.TOP_LEFT)
@@ -153,19 +134,16 @@ public class FilesTable(private val mainView: MainView, protected var documentSe
         if (thumbnailResource != null) {
             val thumbnail = Image(null, thumbnailResource)
             thumbnail.addStyleName("cursor-pointer")
-            thumbnail.addClickListener(object : MouseEvents.ClickListener {
-
-                override fun click(event: MouseEvents.ClickEvent) {
-                    if (lightboxWindowClosed) {
-                        lightboxWindowClosed = false
-                        lw.setImage(document)
-                        UI.getCurrent().addWindow(lw)
-                    } else {
-                        lw.setImage(document)
-                        lw.setImmediate(true)
-                    }
+            thumbnail.addClickListener {
+                if (lightboxWindowClosed) {
+                    lightboxWindowClosed = false
+                    lw.setImage(document)
+                    UI.getCurrent().addWindow(lw)
+                } else {
+                    lw.setImage(document)
+                    lw.isImmediate = true
                 }
-            })
+            }
             return thumbnail
         } else {
             val icon = FileIconUtil.detectIcon(mimeType)
@@ -185,20 +163,17 @@ public class FilesTable(private val mainView: MainView, protected var documentSe
         val download = Button(fileName)
         download.addStyleName(ValoTheme.BUTTON_LINK)
         download.addStyleName("fileLink")
-        download.addClickListener(object : Button.ClickListener {
-
-            override fun buttonClick(event: ClickEvent) {
-                mainView.changeCurrentFolder(document)
-                loadFiles()
-            }
-        })
+        download.addClickListener {
+            mainView.changeCurrentFolder(document)
+            loadFiles()
+        }
 
         val delete = getDeleteButton(document)
 
         val comment = SafeHtmlUtils.htmlEscape(document.metadata.get("comment"))
         val creator = document.metadata.get("creator") as String
 
-        val commentLabel = Label("<span class=\"comment\">" + comment + "</span>", ContentMode.HTML)
+        val commentLabel = Label("<span class=\"comment\">$comment</span>", ContentMode.HTML)
 
         val vl = VerticalLayout(download, commentLabel)
         vl.setComponentAlignment(commentLabel, Alignment.TOP_LEFT)
@@ -208,25 +183,15 @@ public class FilesTable(private val mainView: MainView, protected var documentSe
 
     private fun getDeleteButton(document: Document): Button {
         val delete = Button("Delete")
-        delete.setIcon(ThemeResource("img/delete.png"))
+        delete.icon = ThemeResource("img/delete.png")
         delete.addStyleName(ValoTheme.BUTTON_LINK)
-        delete.addClickListener(object : Button.ClickListener {
+        delete.addClickListener {
+            val confirmation = ConfirmationWindow(Arrays.asList(document), documentService, databaseService)
 
-            override fun buttonClick(event: ClickEvent) {
+            UI.getCurrent().addWindow(confirmation)
 
-                val confirmation = ConfirmationWindow(Arrays.asList(document), documentService, databaseService)
-
-                UI.getCurrent().addWindow(confirmation)
-
-                confirmation.addCloseListener(object : Window.CloseListener {
-
-                    override fun windowClose(e: CloseEvent) {
-                        loadFiles()
-                    }
-                })
-
-            }
-        })
+            confirmation.addCloseListener { loadFiles() }
+        }
         return delete
     }
 }

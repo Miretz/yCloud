@@ -20,34 +20,26 @@ import com.vaadin.ui.VerticalLayout
 import com.vaadin.ui.Window
 import com.vaadin.ui.Window.CloseEvent
 
-public class UsersView
+class UsersView
 @Inject
-constructor(Named("adminUser") protected var adminUser: String, protected var databaseService: DatabaseService) : CustomComponent(), View {
+constructor(@Named("adminUser") protected var adminUser: String, protected var databaseService: DatabaseService) : CustomComponent(), View {
 
-    private val text: Label
-    private val header: HeaderPanel
-    private val btnCreateUser: Button
-    private val backButton: Button
-    private val users: VerticalLayout
+    private val text: Label = Label()
+    private val header: HeaderPanel = HeaderPanel()
+    private val btnCreateUser: Button = Button("Create User")
+    private val backButton: Button = Button("Return")
+    private val users: VerticalLayout = VerticalLayout()
 
-    init {
-        this.text: Label = Label()
-        this.header: HeaderPanel = HeaderPanel()
-        this.btnCreateUser: Button = Button("Create User")
-        this.backButton: Button = Button("Return")
-        this.users: VerticalLayout = VerticalLayout()
-    }
-
-    public fun initialize() {
+    fun initialize() {
 
         val vl = VerticalLayout()
-        vl.setSpacing(true)
+        vl.isSpacing = true
         vl.setSizeFull()
         vl.addComponent(header)
 
         val statistics = HorizontalLayout()
         statistics.addComponent(text)
-        statistics.setSpacing(true)
+        statistics.isSpacing = true
 
         vl.addComponent(statistics)
         vl.setComponentAlignment(statistics, Alignment.MIDDLE_CENTER)
@@ -59,12 +51,12 @@ constructor(Named("adminUser") protected var adminUser: String, protected var da
         vl.addComponent(users)
         loadUsers()
 
-        setCompositionRoot(vl)
+        compositionRoot = vl
     }
 
     private fun loadUsers() {
         users.removeAllComponents()
-        for (user in databaseService.listUsernames()) {
+        databaseService.listUsernames().forEach { user ->
             val hl = HorizontalLayout()
             if (user == adminUser) {
                 hl.addComponent(Label(user + " [admin]"))
@@ -79,7 +71,7 @@ constructor(Named("adminUser") protected var adminUser: String, protected var da
                 }))
             }
             users.addComponent(hl)
-            users.setImmediate(true)
+            users.isImmediate = true
         }
     }
 
@@ -87,9 +79,9 @@ constructor(Named("adminUser") protected var adminUser: String, protected var da
 
         initialize()
 
-        val username = (getSession().getAttribute("user")) as String
+        val username = (session.getAttribute("user")) as String
         header.enableLogout()
-        text.setValue("Current user: " + username)
+        text.value = "Current user: " + username
 
         btnCreateUser.addClickListener(object : Button.ClickListener {
 
@@ -109,13 +101,13 @@ constructor(Named("adminUser") protected var adminUser: String, protected var da
         backButton.addClickListener(object : Button.ClickListener {
 
             override fun buttonClick(event: ClickEvent) {
-                getUI().getNavigator().navigateTo(MainView.NAME)
+                ui.navigator.navigateTo(MainView.NAME)
             }
         })
     }
 
     companion object {
-        public val NAME: String = "users"
+        val NAME: String = "users"
     }
 
 }
