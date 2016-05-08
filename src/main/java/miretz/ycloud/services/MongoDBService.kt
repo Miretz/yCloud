@@ -60,7 +60,7 @@ constructor(
     }
 
     fun rootFolderSetup() {
-        addDocument(miretz.ycloud.models.Document("root", "root", "", HashMap<String, String>(), miretz.ycloud.models.Document.TYPE_FOLDER))
+        addDocument(miretz.ycloud.models.Document("root", "root", "", HashMap<String, String>(), miretz.ycloud.models.Document.TYPE_FOLDER, null))
     }
 
     fun adminUserSetup() {
@@ -141,6 +141,7 @@ constructor(
         }
         document.append("metadata", metadata)
         document.append("createdDate", Date())
+        document.append("retentionDate", documentToStore.retentionDate)
 
         table.insertOne(document)
 
@@ -180,7 +181,7 @@ constructor(
     }
 
     private fun getDocument(document: Document): miretz.ycloud.models.Document {
-        return miretz.ycloud.models.Document(document.getString("contentId"), document.getString("fileName"), document.getString("parentId"), getMetadataAsMap(document), document.getString("type"))
+        return miretz.ycloud.models.Document(document.getString("contentId"), document.getString("fileName"), document.getString("parentId"), getMetadataAsMap(document), document.getString("type"), document.getDate("retentionDate"))
     }
 
     override fun deleteAllDocuments() {

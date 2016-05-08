@@ -96,8 +96,15 @@ constructor(@Named("thumbnailDir") thumbnailDir: String, @Named("uploadDir") upl
         return sdf.format(timestamp)
     }
 
+    override fun getRetentionDate(document: Document): String {
+        val timestamp = document.retentionDate ?: return ""
+        val sdf = SimpleDateFormat(dateFormat)
+        return sdf.format(timestamp)
+    }
+
     override fun getFileResource(document: Document): FileResource {
-        return CustomFileNameResource(getFileFromDir(uploadDir, document.contentId), document.fileName)
+        val file = getFileFromDir(uploadDir, document.contentId) ?: throw IllegalStateException("file not found")
+        return CustomFileNameResource(file, document.fileName)
     }
 
     override fun getThumbnailFileResource(document: Document): FileResource? {

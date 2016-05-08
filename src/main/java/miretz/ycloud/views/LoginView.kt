@@ -6,16 +6,12 @@ import miretz.ycloud.views.partials.HeaderPanel
 
 import com.google.inject.Inject
 import com.vaadin.data.validator.EmailValidator
+import com.vaadin.event.ShortcutAction
 import com.vaadin.navigator.View
 import com.vaadin.navigator.ViewChangeListener.ViewChangeEvent
 import com.vaadin.shared.ui.MarginInfo
-import com.vaadin.ui.Alignment
-import com.vaadin.ui.Button
+import com.vaadin.ui.*
 import com.vaadin.ui.Button.ClickEvent
-import com.vaadin.ui.CustomComponent
-import com.vaadin.ui.PasswordField
-import com.vaadin.ui.TextField
-import com.vaadin.ui.VerticalLayout
 
 class LoginView
 @Inject
@@ -47,6 +43,8 @@ constructor(protected var databaseService: DatabaseService) : CustomComponent(),
         password.isRequired = true
         password.value = ""
         password.nullRepresentation = ""
+
+        loginButton.setClickShortcut(ShortcutAction.KeyCode.ENTER)
 
         // Add both to a panel
         val fields = VerticalLayout(user, password, loginButton)
@@ -84,6 +82,7 @@ constructor(protected var databaseService: DatabaseService) : CustomComponent(),
         } else {
             this.password.value = null
             this.password.focus()
+            Notification.show("Error", "Invalid Password", Notification.Type.ERROR_MESSAGE)
         }
     }
 

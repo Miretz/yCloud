@@ -1,9 +1,12 @@
 package miretz.ycloud.views.windows
 
+import com.vaadin.data.Property
 import com.vaadin.server.Page
+import com.vaadin.shared.ui.datefield.Resolution
 import com.vaadin.ui.*
 import com.vaadin.ui.Upload.*
 import miretz.ycloud.models.Document
+import miretz.ycloud.models.DocumentMetadata
 import miretz.ycloud.services.DatabaseService
 import miretz.ycloud.services.DocumentService
 import org.apache.log4j.Logger
@@ -23,6 +26,9 @@ class UploadWindow(documentService: DocumentService, databaseService: DatabaseSe
     private val commentLabel = Label("File comment:")
     private val commentField = TextField()
     private val uploadButton = Button("Upload file")
+    private val retentionCheckbox = CheckBox("Temporary file");
+    private val retentionDateField = DateField();
+    private val retentionDateLabel = Label("Delete file on:")
 
     init {
         center()
@@ -72,10 +78,16 @@ class UploadWindow(documentService: DocumentService, databaseService: DatabaseSe
                 val creator = (session.getAttribute("user")) as String
 
                 val metadata = HashMap<String, String>()
-                metadata.put("creator", creator)
-                metadata.put("comment", commentField.value)
+                metadata.put(DocumentMetadata.CREATOR.toString(), creator)
+                metadata.put(DocumentMetadata.COMMENT.toString(), commentField.value)
 
-                val document = Document(uid, filenameField.value, currentFolder.contentId, metadata, Document.TYPE_FILE)
+                val retentionDate = if (retentionCheckbox.value!!) {
+                    retentionDateField.value
+                } else {
+                    null
+                }
+
+                val document = Document(uid, filenameField.value, currentFolder.contentId, metadata, Document.TYPE_FILE, retentionDate)
 
                 documentService.saveThumbnail(document)
 
@@ -104,6 +116,9 @@ class UploadWindow(documentService: DocumentService, databaseService: DatabaseSe
             bar.value = 0f
             commentField.isVisible = false
             commentLabel.isVisible = false
+            retentionCheckbox.isVisible = false
+            retentionDateField.isVisible = false
+            retentionDateLabel.isVisible = false
             filenameLabel.isVisible = false
             filenameField.isVisible = false
         }
@@ -117,6 +132,18 @@ class UploadWindow(documentService: DocumentService, databaseService: DatabaseSe
         commentField.isVisible = true
         commentField.setWidth("250px")
 
+        retentionCheckbox.isVisible = true
+        retentionDateField.isVisible = false
+        retentionDateLabel.isVisible = false
+        retentionDateField.setWidth("250px")
+
+        retentionDateField.resolution = Resolution.MINUTE
+
+        retentionCheckbox.addValueChangeListener{
+            retentionDateField.isVisible = retentionCheckbox.value
+            retentionDateLabel.isVisible = retentionCheckbox.value
+        }
+
         filenameLabel.isVisible = true
         filenameField.isVisible = true
         filenameField.setWidth("250px")
@@ -126,6 +153,9 @@ class UploadWindow(documentService: DocumentService, databaseService: DatabaseSe
         content.addComponent(filenameField)
         content.addComponent(commentLabel)
         content.addComponent(commentField)
+        content.addComponent(retentionCheckbox)
+        content.addComponent(retentionDateLabel)
+        content.addComponent(retentionDateField)
 
         uploadButton.setWidth("100px")
         uploadButton.addClickListener { upload.submitUpload() }

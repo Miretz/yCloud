@@ -5,9 +5,9 @@ import com.vaadin.server.FileDownloader
 import com.vaadin.server.ThemeResource
 import com.vaadin.shared.ui.label.ContentMode
 import com.vaadin.ui.*
-import com.vaadin.ui.Window.CloseEvent
 import com.vaadin.ui.themes.ValoTheme
 import miretz.ycloud.models.Document
+import miretz.ycloud.models.DocumentMetadata
 import miretz.ycloud.services.DatabaseService
 import miretz.ycloud.services.DocumentService
 import miretz.ycloud.services.utils.FileIconUtil
@@ -33,6 +33,7 @@ class FilesTable(private val mainView: MainView, protected var documentService: 
         table.addContainerProperty("FileName / Comment", VerticalLayout::class.java, null)
         table.addContainerProperty("Creator", String::class.java, null)
         table.addContainerProperty("Modified", String::class.java, null)
+        table.addContainerProperty("Retention", String::class.java, null)
         table.addContainerProperty("Size",  String::class.java, null)
         table.addContainerProperty("File Type", String::class.java, null)
         table.addContainerProperty("Delete", Button::class.java, null)
@@ -53,12 +54,7 @@ class FilesTable(private val mainView: MainView, protected var documentService: 
         setSizeFull()
 
         lw = LightboxWindow(documentService)
-        lw.addCloseListener(object : Window.CloseListener {
-
-            override fun windowClose(e: CloseEvent) {
-                lightboxWindowClosed = true
-            }
-        })
+        lw.addCloseListener { lightboxWindowClosed = true }
     }
 
     fun loadFiles() {
@@ -96,6 +92,8 @@ class FilesTable(private val mainView: MainView, protected var documentService: 
 
         val modified = documentService.getModifiedDate(document)
 
+        val retention = documentService.getRetentionDate(document)
+
         val download = Button(document.fileName)
         val downloadResource = documentService.getFileResource(document)
         val fileDownloader = FileDownloader(downloadResource)
@@ -118,15 +116,15 @@ class FilesTable(private val mainView: MainView, protected var documentService: 
             confirmation.addCloseListener { loadFiles() }
         }
 
-        val comment = SafeHtmlUtils.htmlEscape(document.metadata["comment"])
-        val creator = document.metadata.get("creator") as String
+        val comment = SafeHtmlUtils.htmlEscape(document.metadata[DocumentMetadata.COMMENT.toString()])
+        val creator = document.metadata[DocumentMetadata.CREATOR.toString()] as String
 
         val commentLabel = Label("<span class=\"comment\">$comment</span>", ContentMode.HTML)
 
         val vl = VerticalLayout(download, commentLabel)
         vl.setComponentAlignment(commentLabel, Alignment.TOP_LEFT)
 
-        table.addItem(arrayOf(thumbnail, vl, creator, modified, size, mimeType, delete), counter)
+        table.addItem(arrayOf(thumbnail, vl, creator, modified, retention, size, mimeType, delete), counter)
     }
 
     private fun getThumbnail(document: Document, mimeType: String): Image {

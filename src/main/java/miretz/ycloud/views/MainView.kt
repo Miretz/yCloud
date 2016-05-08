@@ -119,67 +119,40 @@ constructor(@Named("adminUser") protected var adminUser: String, @Named("uploadD
         uploadButton.styleName = ValoTheme.BUTTON_FRIENDLY
         uploadButton.icon = ThemeResource("img/upload.png")
         uploadButton.description = "Upload File"
-        uploadButton.addClickListener(object : Button.ClickListener {
-
-            override fun buttonClick(event: ClickEvent) {
-                val uv = UploadWindow(documentService, databaseService, uploadDir, currentFolder)
-                UI.getCurrent().addWindow(uv)
-                uv.addCloseListener(object : Window.CloseListener {
-
-                    override fun windowClose(e: CloseEvent) {
-                        filesTable.loadFiles()
-                        generateStats()
-
-                    }
-                })
-
+        uploadButton.addClickListener {
+            val uv = UploadWindow(documentService, databaseService, uploadDir, currentFolder)
+            UI.getCurrent().addWindow(uv)
+            uv.addCloseListener {
+                filesTable.loadFiles()
+                generateStats()
             }
-        })
+        }
 
         createFolderButton.description = "Create Folder"
-        createFolderButton.addClickListener(object : Button.ClickListener {
-
-            override fun buttonClick(event: ClickEvent) {
-                val uv = CreateFolderWindow(databaseService, currentFolder)
-                UI.getCurrent().addWindow(uv)
-                uv.addCloseListener(object : Window.CloseListener {
-
-                    override fun windowClose(e: CloseEvent) {
-                        filesTable.loadFiles()
-                        generateStats()
-
-                    }
-                })
-
+        createFolderButton.addClickListener {
+            val uv = CreateFolderWindow(databaseService, currentFolder)
+            UI.getCurrent().addWindow(uv)
+            uv.addCloseListener {
+                filesTable.loadFiles()
+                generateStats()
             }
-        })
+        }
 
         goToParentButton.description = "Go to Parent folder"
-        goToParentButton.addClickListener(object : Button.ClickListener {
-
-            override fun buttonClick(event: ClickEvent) {
-                goToParentFolder()
-                filesTable.loadFiles()
-            }
-        })
+        goToParentButton.addClickListener {
+            goToParentFolder()
+            filesTable.loadFiles()
+        }
 
         reloadButton.icon = ThemeResource("img/reload.png")
         reloadButton.description = "Reload Files"
-        reloadButton.addClickListener(object : Button.ClickListener {
-
-            override fun buttonClick(event: ClickEvent) {
-                filesTable.loadFiles()
-                generateStats()
-                Notification.show("Files reloaded", "", Notification.Type.HUMANIZED_MESSAGE)
-            }
-        })
-
-        val source = object : StreamResource.StreamSource {
-
-            override fun getStream(): InputStream {
-                return documentService.getAllFilesZip(databaseService.getDescendants(currentFolder.contentId))
-            }
+        reloadButton.addClickListener {
+            filesTable.loadFiles()
+            generateStats()
+            Notification.show("Files reloaded", "", Notification.Type.HUMANIZED_MESSAGE)
         }
+
+        val source = StreamResource.StreamSource { documentService.getAllFilesZip(databaseService.getDescendants(currentFolder.contentId)) }
         val sr = StreamResource(source, currentFolder.fileName + "_all_files.zip")
         val fileDownloader = FileDownloader(sr)
         downloadAllButton.icon = ThemeResource("img/zip.png")
@@ -189,24 +162,19 @@ constructor(@Named("adminUser") protected var adminUser: String, @Named("uploadD
         deleteAllButton.isVisible = true
         deleteAllButton.icon = ThemeResource("img/delete.png")
         deleteAllButton.description = "Delete all files"
-        deleteAllButton.addClickListener(object : Button.ClickListener {
+        deleteAllButton.addClickListener {
+            val confirmation = ConfirmationWindow(databaseService.getDescendants(currentFolder.contentId), documentService, databaseService)
 
-            override fun buttonClick(event: ClickEvent) {
+            UI.getCurrent().addWindow(confirmation)
 
-                val confirmation = ConfirmationWindow(databaseService.getDescendants(currentFolder.contentId), documentService, databaseService)
+            confirmation.addCloseListener(object : Window.CloseListener {
 
-                UI.getCurrent().addWindow(confirmation)
-
-                confirmation.addCloseListener(object : Window.CloseListener {
-
-                    override fun windowClose(e: CloseEvent) {
-                        filesTable.loadFiles()
-                        generateStats()
-                    }
-                })
-
-            }
-        })
+                override fun windowClose(e: CloseEvent) {
+                    filesTable.loadFiles()
+                    generateStats()
+                }
+            })
+        }
         generateStats()
     }
 

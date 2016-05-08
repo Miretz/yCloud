@@ -51,7 +51,7 @@ class CreateFolderWindow(databaseService: DatabaseService, currentFolder: Docume
             metadata.put("creator", creator)
             metadata.put("comment", commentField.value)
 
-            val document = Document(UUID.randomUUID().toString(), fileNameField.value, currentFolder.contentId, metadata, Document.TYPE_FOLDER)
+            val document = Document(UUID.randomUUID().toString(), fileNameField.value, currentFolder.contentId, metadata, Document.TYPE_FOLDER, null)
 
             databaseService.addDocument(document)
 

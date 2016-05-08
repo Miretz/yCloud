@@ -13,6 +13,8 @@ interface DocumentService {
 
     fun getModifiedDate(document: Document): String
 
+    fun getRetentionDate(document: Document): String
+
     fun getFileResource(document: Document): FileResource
 
     fun getThumbnailFileResource(document: Document): FileResource?
