@@ -17,11 +17,9 @@ interface DocumentService {
 
     fun getThumbnailFileResource(document: Document): FileResource?
 
-    fun getFreeSpace(): Double
+    fun getFreeSpace(): String
 
-    fun getSizeOfFiles(): Double
-
-    fun getSizeInMbDouble(size: Long): Double
+    fun getSizeOfFiles(): String
 
     fun saveThumbnail(document: Document)
 

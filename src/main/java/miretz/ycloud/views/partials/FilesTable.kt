@@ -15,6 +15,7 @@ import miretz.ycloud.services.utils.Icons
 import miretz.ycloud.views.MainView
 import miretz.ycloud.views.windows.ConfirmationWindow
 import miretz.ycloud.views.windows.LightboxWindow
+import org.apache.commons.io.FileUtils
 import java.util.*
 
 class FilesTable(private val mainView: MainView, protected var documentService: DocumentService, protected var databaseService: DatabaseService) : Panel() {
@@ -32,7 +33,7 @@ class FilesTable(private val mainView: MainView, protected var documentService: 
         table.addContainerProperty("FileName / Comment", VerticalLayout::class.java, null)
         table.addContainerProperty("Creator", String::class.java, null)
         table.addContainerProperty("Modified", String::class.java, null)
-        table.addContainerProperty("Size (MB)",  String::class.java, null)
+        table.addContainerProperty("Size",  String::class.java, null)
         table.addContainerProperty("File Type", String::class.java, null)
         table.addContainerProperty("Delete", Button::class.java, null)
 
@@ -87,7 +88,7 @@ class FilesTable(private val mainView: MainView, protected var documentService: 
     private fun addFileToTable(counter: Int, document: Document) {
         val file = documentService.getFile(document)
 
-        val size = documentService.getSizeInMbDouble(file.length())
+        val size = FileUtils.byteCountToDisplaySize(file.length())
 
         val mimeType = documentService.getFileMimeType(document)
 
@@ -125,7 +126,7 @@ class FilesTable(private val mainView: MainView, protected var documentService: 
         val vl = VerticalLayout(download, commentLabel)
         vl.setComponentAlignment(commentLabel, Alignment.TOP_LEFT)
 
-        table.addItem(arrayOf(thumbnail, vl, creator, modified, size.toString(), mimeType, delete), counter)
+        table.addItem(arrayOf(thumbnail, vl, creator, modified, size, mimeType, delete), counter)
     }
 
     private fun getThumbnail(document: Document, mimeType: String): Image {

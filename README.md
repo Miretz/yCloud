@@ -10,6 +10,8 @@ By default a fake in memory MongoDB (https://github.com/fakemongo/fongo) is used
 This is a complete Intellij Idea project.
 I'm using the community edition.
 
+<img src="scrot.png" />
+
 Workflow
 ========
 Prerequisites

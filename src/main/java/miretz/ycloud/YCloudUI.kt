@@ -32,7 +32,6 @@ import com.vaadin.ui.UI
             override fun error(event: com.vaadin.server.ErrorEvent) {
                 // Find the final cause
                 var cause = "Application Error: "
-
                 var t: Throwable? = event.throwable
                 while (t != null) {
                     if (t.cause == null)

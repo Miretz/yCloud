@@ -211,7 +211,7 @@ constructor(@Named("adminUser") protected var adminUser: String, @Named("uploadD
     }
 
     fun generateStats() {
-        sizeStats.value = "CURRENT FOLDER: " + currentFolder.fileName + " " + username + " in " + uploadDir + " (" + documentService.getSizeOfFiles() + " / " + documentService.getFreeSpace() + " MB)"
+        sizeStats.value = "CURRENT FOLDER: " + currentFolder.fileName + " " + username + " in " + uploadDir + " (" + documentService.getSizeOfFiles() + " / " + documentService.getFreeSpace() + " )"
     }
 
     companion object {

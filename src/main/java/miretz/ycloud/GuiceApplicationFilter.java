@@ -6,5 +6,6 @@ import javax.servlet.annotation.WebFilter;
 
 @WebFilter(urlPatterns = "/*")
 public class GuiceApplicationFilter extends GuiceFilter {
+    /* Empty */
 }
 

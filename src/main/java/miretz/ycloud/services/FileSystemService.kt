@@ -28,6 +28,7 @@ import com.google.inject.Inject
 import com.google.inject.name.Named
 import com.vaadin.server.FileResource
 import miretz.ycloud.services.utils.CustomFileNameResource
+import org.apache.commons.io.FileUtils
 
 @Singleton
 class FileSystemService
@@ -37,7 +38,6 @@ constructor(@Named("thumbnailDir") thumbnailDir: String, @Named("uploadDir") upl
     protected val thumbnailDimensions: Dimension
     protected val thumbnailDir: File
     protected val uploadDir: File
-
 
     init {
         this.thumbnailDimensions = Dimension(50, 50)
@@ -66,7 +66,7 @@ constructor(@Named("thumbnailDir") thumbnailDir: String, @Named("uploadDir") upl
 
         // delete file
         val file = getFileFromDir(uploadDir, contentId)
-        if (file != null) {
+        if (file != null && file.exists()) {
             return file.delete()
         }
 
@@ -105,22 +105,14 @@ constructor(@Named("thumbnailDir") thumbnailDir: String, @Named("uploadDir") upl
         return FileResource(thumbnail)
     }
 
-    override fun getFreeSpace(): Double {
+    override fun getFreeSpace(): String {
         val freeSpace = uploadDir.freeSpace
-        return getSizeInMbDouble(freeSpace)
+        return FileUtils.byteCountToDisplaySize(freeSpace)
     }
 
-    override fun getSizeOfFiles(): Double {
-        var fileSizes = 0L
-        for (file in uploadDir.listFiles()!!) {
-            fileSizes += file.length()
-        }
-        return getSizeInMbDouble(fileSizes)
-    }
-
-    override fun getSizeInMbDouble(size: Long): Double {
-        val sizeMb = size.toDouble() / 1024.0 / 1024.0
-        return Math.round(sizeMb * 100.0) / 100.0
+    override fun getSizeOfFiles(): String {
+        val sizeOfDir = FileUtils.sizeOfDirectory(uploadDir)
+        return FileUtils.byteCountToDisplaySize(sizeOfDir)
     }
 
     override fun saveThumbnail(document: Document) {
