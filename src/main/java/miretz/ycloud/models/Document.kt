@@ -9,16 +9,3 @@ class Document(val contentId: String, val fileName: String, val parentId: String
     }
 
 }
-
-enum class DocumentMetadata private constructor(private val text: String) {
-
-    COMMENT("comment"),
-    CREATOR("creator");
-
-    override fun toString(): String {
-        return text
-    }
-
-}
-
-

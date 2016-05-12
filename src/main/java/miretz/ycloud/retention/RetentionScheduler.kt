@@ -1,10 +1,9 @@
 package miretz.ycloud.retention
 
 import com.google.inject.Inject
-import com.vaadin.server.Page
+import com.google.inject.name.Named
 import miretz.ycloud.services.DatabaseService
 import miretz.ycloud.services.DocumentService
-import org.apache.log4j.Logger
 import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
@@ -14,7 +13,7 @@ import javax.inject.Singleton
 @Singleton
 class RetentionScheduler
 @Inject
-constructor(protected val documentService: DocumentService, protected val databaseService: DatabaseService) {
+constructor(protected val documentService: DocumentService, protected val databaseService: DatabaseService, @Named("retentionCheckInterval") retentionCheckInterval : Long) {
 
     protected val scheduler: ScheduledExecutorService
 
@@ -23,7 +22,7 @@ constructor(protected val documentService: DocumentService, protected val databa
         scheduler = Executors.newScheduledThreadPool(1)
         scheduler.scheduleAtFixedRate({
             checkRetention()
-        }, 20, 1, TimeUnit.SECONDS)
+        }, retentionCheckInterval, 1, TimeUnit.SECONDS)
     }
 
     fun checkRetention() {

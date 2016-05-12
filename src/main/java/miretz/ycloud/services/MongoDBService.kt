@@ -81,14 +81,12 @@ constructor(
 
         val table = database.getCollection(usersDbTableName)
         val users = table.find(eq("username", username))
-
-        for (user in users) {
-            val pValue = user.getString("password")
+        users.forEach {
+            val pValue = it.getString("password")
             if (PasswordHashUtil.validatePassword(password, pValue)) {
                 return true
             }
         }
-
         return false
 
     }
