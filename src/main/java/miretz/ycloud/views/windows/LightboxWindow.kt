@@ -1,9 +1,6 @@
 package miretz.ycloud.views.windows
 
-import com.vaadin.ui.Alignment
-import com.vaadin.ui.HorizontalLayout
-import com.vaadin.ui.Image
-import com.vaadin.ui.Window
+import com.vaadin.ui.*
 import miretz.ycloud.models.Document
 import miretz.ycloud.services.DocumentService
 
@@ -34,5 +31,30 @@ class LightboxWindow(protected var documentService: DocumentService) : Window("I
         setSizeFull()
         isImmediate = true
 
+    }
+
+    fun setVideo(document: Document){
+
+        caption = "Video Preview: " + document.fileName
+
+        val layout = HorizontalLayout()
+        content = layout
+
+        layout.setSizeFull()
+        layout.isImmediate = true
+
+        val video = Video()
+        video.isAutoplay = true
+        video.isHtmlContentAllowed = true
+        video.setSource(documentService.getFileResource(document))
+
+        layout.addComponent(video)
+        layout.setComponentAlignment(video, Alignment.MIDDLE_CENTER)
+
+        video.setHeight("75%")
+        video.addStyleName("cursor-pointer")
+
+        setSizeFull()
+        isImmediate = true
     }
 }

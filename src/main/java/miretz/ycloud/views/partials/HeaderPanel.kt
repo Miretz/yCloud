@@ -29,12 +29,7 @@ class HeaderPanel : HorizontalLayout() {
         addComponent(title)
 
         // users button
-        users = Button("Users", object : Button.ClickListener {
-
-            override fun buttonClick(event: ClickEvent) {
-                ui.navigator.navigateTo(UsersView.NAME)
-            }
-        })
+        users = Button("Users", Button.ClickListener { ui.navigator.navigateTo(UsersView.NAME) })
         users.setWidth(null)
         users.isEnabled = false
         users.isVisible = false
@@ -42,12 +37,9 @@ class HeaderPanel : HorizontalLayout() {
         addComponent(users)
 
         // logout button
-        loginName = Button("Logout", object : Button.ClickListener {
-
-            override fun buttonClick(event: ClickEvent) {
-                session.setAttribute("user", null)
-                ui.navigator.navigateTo(LoginView.NAME)
-            }
+        loginName = Button("Logout", Button.ClickListener {
+            session.setAttribute("user", null)
+            ui.navigator.navigateTo(LoginView.NAME)
         })
         loginName.setWidth(null)
         loginName.isEnabled = false

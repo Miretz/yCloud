@@ -12,25 +12,25 @@ object FileIconUtil {
     private val code = Arrays.asList("xml", "properties", "java", "js", "cpp", "c", "py", "rb", "html", "css", "php")
     private val documents = Arrays.asList("ppt", "doc", "docx", "xls", "xlsx", "odt", "psd", "pps")
 
-    fun detectIcon(mimeType: String): String {
+    fun detectIcon(mimeType: String): Icons {
         if (pdf.contains(mimeType)) {
-            return Icons.PDF.toString()
+            return Icons.PDF
         } else if (compressed.contains(mimeType)) {
-            return Icons.COMPRESSED.toString()
+            return Icons.COMPRESSED
         } else if (documents.contains(mimeType)) {
-            return Icons.DOCUMENT.toString()
+            return Icons.DOCUMENT
         } else if (runnable.contains(mimeType)) {
-            return Icons.RUNNABLE.toString()
+            return Icons.RUNNABLE
         } else if (audio.contains(mimeType)) {
-            return Icons.AUDIO.toString()
+            return Icons.AUDIO
         } else if (video.contains(mimeType)) {
-            return Icons.VIDEO.toString()
+            return Icons.VIDEO
         } else if (code.contains(mimeType)) {
-            return Icons.CODE.toString()
+            return Icons.CODE
         } else if (documents.contains(mimeType)) {
-            return Icons.DOCUMENT.toString()
+            return Icons.DOCUMENT
         } else {
-            return Icons.EMPTY.toString()
+            return Icons.EMPTY
         }
     }
 

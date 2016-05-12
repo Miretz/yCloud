@@ -146,8 +146,22 @@ class FilesTable(private val mainView: MainView, protected var documentService: 
             return thumbnail
         } else {
             val icon = FileIconUtil.detectIcon(mimeType)
-            val resource = ThemeResource(icon)
-            return Image(null, resource)
+            val resource = ThemeResource(icon.toString())
+            val thumbnail =  Image(null, resource)
+            if(icon == Icons.VIDEO){
+                thumbnail.addStyleName("cursor-pointer")
+                thumbnail.addClickListener {
+                    if (lightboxWindowClosed) {
+                        lightboxWindowClosed = false
+                        lw.setVideo(document)
+                        UI.getCurrent().addWindow(lw)
+                    } else {
+                        lw.setImage(document)
+                        lw.isImmediate = true
+                    }
+                }
+            }
+            return thumbnail
         }
     }
 
