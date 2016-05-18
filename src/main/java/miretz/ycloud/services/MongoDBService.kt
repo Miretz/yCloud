@@ -36,7 +36,8 @@ constructor(
         const val PROPERTY_DB_NAME: String = "dbName"
     }
 
-    protected var database: MongoDatabase
+    private var database: MongoDatabase
+    private val passwordHashUtil : PasswordHashUtil = PasswordHashUtil()
 
     init {
 
@@ -72,7 +73,7 @@ constructor(
         removeUser(adminUser)
 
         val table = database.getCollection(usersDbTableName)
-        val document = Document().append("username", adminUser).append("password", PasswordHashUtil.createHash(adminPass)).append("createdDate", Date())
+        val document = Document().append("username", adminUser).append("password", passwordHashUtil.createHash(adminPass)).append("createdDate", Date())
 
         table.insertOne(document)
     }
@@ -83,7 +84,7 @@ constructor(
         val users = table.find(eq("username", username))
         users.forEach {
             val pValue = it.getString("password")
-            if (PasswordHashUtil.validatePassword(password, pValue)) {
+            if (passwordHashUtil.validatePassword(password, pValue)) {
                 return true
             }
         }
@@ -92,7 +93,7 @@ constructor(
     }
 
     override fun addUser(username: String, password: String) {
-        val hash = PasswordHashUtil.createHash(password) ?: IllegalStateException("Cannot hash password")
+        val hash = passwordHashUtil.createHash(password) ?: IllegalStateException("Cannot hash password")
         val table = database.getCollection(usersDbTableName)
         val document = Document().append("username", username).append("password", hash).append("createdDate", Date())
         table.insertOne(document)

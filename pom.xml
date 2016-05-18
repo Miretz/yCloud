@@ -136,6 +136,13 @@
             <version>3.0</version>
         </dependency>
 
+        <!-- bcrypt -->
+        <dependency>
+            <groupId>org.mindrot</groupId>
+            <artifactId>jbcrypt</artifactId>
+            <version>0.3m</version>
+        </dependency>
+
         <!-- Unit tests -->
         <dependency>
             <groupId>junit</groupId>
