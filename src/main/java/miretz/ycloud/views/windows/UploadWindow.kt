@@ -62,7 +62,8 @@ class UploadWindow(documentService: DocumentService, databaseService: DatabaseSe
             override fun receiveUpload(filenameV: String?, mimeType: String): OutputStream {
                 try {
                     uid = UUID.randomUUID().toString()
-                    file = File(uploadDir + uid)
+                    val fixedDir = if (uploadDir.endsWith(File.separator)) uploadDir else uploadDir + File.separator
+                    file = File(fixedDir + uid)
                 } catch (e: java.io.FileNotFoundException) {
                     Notification("Could not open file", e.message, Notification.Type.ERROR_MESSAGE).show(Page.getCurrent())
                     logger.error("Could not open file!", e)

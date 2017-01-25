@@ -29,6 +29,7 @@ import com.google.inject.name.Named
 import com.vaadin.server.FileResource
 import miretz.ycloud.services.utils.CustomFileNameResource
 import org.apache.commons.io.FileUtils
+import java.io.File.separator
 
 @Singleton
 class FileSystemService
@@ -42,8 +43,11 @@ constructor(@Named("thumbnailDir") thumbnailDir: String, @Named("uploadDir") upl
     init {
         this.thumbnailDimensions = Dimension(50, 50)
 
-        val uploadDirFile: File? = File(uploadDir)
-        val thumbnailDirFile: File? = File(thumbnailDir)
+        val fixedUploadDir = fixDirPath(uploadDir)
+        val fixedThumbDir = fixDirPath(thumbnailDir)
+
+        val uploadDirFile: File? = File(fixedUploadDir)
+        val thumbnailDirFile: File? = File(fixedThumbDir)
 
         this.uploadDir = uploadDirFile ?: throw IllegalStateException("upload directory is not set")
         this.thumbnailDir = thumbnailDirFile ?: throw IllegalStateException("thumbnail directory is not set")
@@ -148,14 +152,14 @@ constructor(@Named("thumbnailDir") thumbnailDir: String, @Named("uploadDir") upl
 
             img.createGraphics().drawImage(scaled, 0, 0, null)
             val cropped = img.getSubimage(xPos, yPos, thumbnailDimensions.width, thumbnailDimensions.height)
-            ImageIO.write(cropped, imgExtension, File(thumbnailDir.absolutePath + File.separator + document.contentId))
+            ImageIO.write(cropped, imgExtension, File(thumbnailDir.absolutePath + separator + document.contentId))
         }
 
     }
 
     override fun getAllFilesZip(documents: List<Document>): InputStream {
         try {
-            val f = File(uploadDir.absolutePath + File.separator + "all_files.zip")
+            val f = File(uploadDir.absolutePath + separator + "all_files.zip")
             if (f.exists() && f.isFile) {
                 f.delete()
             }
@@ -203,6 +207,10 @@ constructor(@Named("thumbnailDir") thumbnailDir: String, @Named("uploadDir") upl
             file = files[0]
         }
         return file
+    }
+
+    private fun fixDirPath(dir: String): String {
+        return if (dir.endsWith(separator)) dir else dir + separator
     }
 
     override fun getFile(document: Document): File {
