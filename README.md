@@ -7,7 +7,7 @@ Before run modify the config.properties file.
 
 By default a fake in memory MongoDB (https://github.com/fakemongo/fongo) is used.
 
-<img src="scrot.png" />
+<img src="screenshots/scrot.png" />
 
 
 Features
@@ -25,13 +25,13 @@ Features
 Upload with Progress Bar
 ========================
 
-<img src="upload.png" />
+<img src="screenshots/upload.png" />
 
 
 Temporary file support
 ======================
 
-<img src="tempfile.png" />
+<img src="screenshots/tempfile.png" />
 
 
 Workflow
