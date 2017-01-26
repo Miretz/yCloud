@@ -223,7 +223,7 @@ constructor(@Named("thumbnailDir") thumbnailDir: String, @Named("uploadDir") upl
         if (lastIndexOf == -1) {
             return "" // empty extension
         }
-        return name.substring(lastIndexOf + 1)
+        return name.substring(lastIndexOf + 1).toLowerCase()
     }
 
     companion object {

@@ -13,13 +13,12 @@ import javax.inject.Singleton
 @Singleton
 class RetentionScheduler
 @Inject
-constructor(protected val documentService: DocumentService, protected val databaseService: DatabaseService, @Named("retentionCheckInterval") retentionCheckInterval : Long) {
+constructor(val documentService: DocumentService, val databaseService: DatabaseService, @Named("retentionCheckInterval") retentionCheckInterval : Long) {
 
-    protected val scheduler: ScheduledExecutorService
+    private val scheduler: ScheduledExecutorService = Executors.newScheduledThreadPool(1)
 
     init {
         //check all file retention and delete
-        scheduler = Executors.newScheduledThreadPool(1)
         scheduler.scheduleAtFixedRate({
             checkRetention()
         }, retentionCheckInterval, 1, TimeUnit.SECONDS)
@@ -27,7 +26,7 @@ constructor(protected val documentService: DocumentService, protected val databa
 
     fun checkRetention() {
         val allDocs = databaseService.getAllDocuments();
-        allDocs.forEach {
+        allDocs.forEach { it ->
             if (it.retentionDate != null && it.retentionDate.before(Date())) {
                 databaseService.deleteDocument(it.contentId)
                 documentService.deleteFile(it)

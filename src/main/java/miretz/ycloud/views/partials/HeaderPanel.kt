@@ -12,8 +12,13 @@ import miretz.ycloud.views.LoginView
 import miretz.ycloud.views.UsersView
 
 class HeaderPanel : HorizontalLayout() {
-    private val loginName: Button
-    private val users: Button
+
+    private val loginName: Button = Button("Logout", Button.ClickListener {
+        session.setAttribute("user", null)
+        ui.navigator.navigateTo(LoginView.NAME)
+    })
+
+    private val users: Button = Button("Users", Button.ClickListener { ui.navigator.navigateTo(UsersView.NAME) })
 
     init {
         styleName = "backBlue"
@@ -29,7 +34,6 @@ class HeaderPanel : HorizontalLayout() {
         addComponent(title)
 
         // users button
-        users = Button("Users", Button.ClickListener { ui.navigator.navigateTo(UsersView.NAME) })
         users.setWidth(null)
         users.isEnabled = false
         users.isVisible = false
@@ -37,10 +41,6 @@ class HeaderPanel : HorizontalLayout() {
         addComponent(users)
 
         // logout button
-        loginName = Button("Logout", Button.ClickListener {
-            session.setAttribute("user", null)
-            ui.navigator.navigateTo(LoginView.NAME)
-        })
         loginName.setWidth(null)
         loginName.isEnabled = false
         loginName.isVisible = false

@@ -1,6 +1,6 @@
 package miretz.ycloud.models
 
-enum class DocumentMetadata private constructor(private val text: String) {
+enum class DocumentMetadata constructor(private val text: String) {
 
     COMMENT("comment"),
     CREATOR("creator");

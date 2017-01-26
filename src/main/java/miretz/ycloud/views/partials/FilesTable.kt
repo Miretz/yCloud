@@ -20,7 +20,7 @@ import java.util.*
 
 class FilesTable(private val mainView: MainView, protected var documentService: DocumentService, protected var databaseService: DatabaseService) : Panel() {
 
-	private val lw: LightboxWindow
+    private val lw: LightboxWindow
     private val table: Table
 
     private var lightboxWindowClosed = true
@@ -34,7 +34,7 @@ class FilesTable(private val mainView: MainView, protected var documentService: 
         table.addContainerProperty("Creator", String::class.java, null)
         table.addContainerProperty("Modified", String::class.java, null)
         table.addContainerProperty("Retention", String::class.java, null)
-        table.addContainerProperty("Size",  String::class.java, null)
+        table.addContainerProperty("Size", String::class.java, null)
         table.addContainerProperty("File Type", String::class.java, null)
         table.addContainerProperty("Delete", Button::class.java, null)
 
@@ -147,8 +147,8 @@ class FilesTable(private val mainView: MainView, protected var documentService: 
         } else {
             val icon = FileIconUtil.detectIcon(mimeType)
             val resource = ThemeResource(icon.toString())
-            val thumbnail =  Image(null, resource)
-            if(icon == Icons.VIDEO){
+            val thumbnail = Image(null, resource)
+            if (icon == Icons.VIDEO) {
                 thumbnail.addStyleName("cursor-pointer")
                 thumbnail.addClickListener {
                     if (lightboxWindowClosed) {

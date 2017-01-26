@@ -23,10 +23,10 @@ constructor(
         @Named(MongoDBService.PROPERTY_DB_PASS) dbPass: String,
         @Named(MongoDBService.PROPERTY_DB_USER) dbUser: String,
 
-        @Named("adminUser") protected var adminUser: String,
-        @Named("adminPass") protected var adminPass: String,
-        @Named("usersDbTableName") protected var usersDbTableName: String,
-        @Named("filesDbTableName") protected var filesDbTableName: String) : DatabaseService {
+        @Named("adminUser") var adminUser: String,
+        @Named("adminPass") var adminPass: String,
+        @Named("usersDbTableName") var usersDbTableName: String,
+        @Named("filesDbTableName") var filesDbTableName: String) : DatabaseService {
 
     companion object {
         const val PROPERTY_DB_HOST: String = "dbHost"

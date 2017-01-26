@@ -1,8 +1,8 @@
 package miretz.ycloud.services.utils;
 
-import java.io.File;
-
 import com.vaadin.server.FileResource;
+
+import java.io.File;
 
 @SuppressWarnings("serial")
 public class CustomFileNameResource extends FileResource {
